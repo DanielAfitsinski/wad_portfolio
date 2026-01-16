@@ -7,10 +7,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependencies
 node_modules
+vendor
+composer.phar
+composer.lock
+
+# Build outputs
 dist
 dist-ssr
 *.local
+build
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +36,26 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# PHP
+*.cache
+.phpunit.result.cache
+
+# Backend config files (sensitive)
+backend/config/database.php
+backend/config/mail.php
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Testing
+coverage
+.nyc_output

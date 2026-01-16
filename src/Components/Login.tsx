@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { authService } from "../services/authService";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -14,67 +15,39 @@ export function Login() {
     e.preventDefault();
     setError("");
     setIsLocked(false);
+
     try {
-      const response = await fetch("/api/login.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Login successful");
-        window.location.href = "/dashboard";
-      } else if (response.status === 429) {
-        // Account is locked due to too many failed attempts
-        console.error("Account locked:", data.message);
+      await authService.login(email, password);
+      window.location.href = "/dashboard";
+    } catch (error: any) {
+      if (error.response?.status === 429) {
+        console.error("Account locked:", error.response.data.message);
         setIsLocked(true);
-        setLockTimeRemaining(data.lockedUntil || 5);
+        setLockTimeRemaining(error.response.data.lockedUntil || 5);
         setError(
-          data.message || "Too many failed attempts. Please try again later."
+          error.response.data.message ||
+            "Too many failed attempts. Please try again later."
         );
       } else {
-        console.error("Login failed:", data.error);
-        setError(data.error || "Login failed");
+        console.error("Login failed:", error.response?.data?.error);
+        setError(error.response?.data?.error || "Login failed");
       }
-    } catch (error) {
-      console.error("Request Failed: ", error);
-      setError("Connection error. Please try again.");
     }
   };
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
       try {
-        const response = await fetch("/api/google-login.php", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ token: codeResponse.access_token }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          console.log("Google login successful");
-          window.location.href = "/dashboard";
-        } else {
-          console.error("Google login failed:", data.error);
-          setError(data.error || "Google login failed");
-        }
-      } catch (error) {
-        console.error("Google login request failed: ", error);
-        setError("Google login failed. Please try again.");
+        await authService.googleLogin(codeResponse.access_token);
+        console.log("Google login successful, redirecting...");
+        window.location.href = "/dashboard";
+      } catch (error: any) {
+        console.error("Google login failed: ", error.response?.data?.error);
+        setError(error.response?.data?.error || "Google login failed");
       }
     },
-    onError: () => {
-      console.error("Google login failed");
+    onError: (error) => {
+      console.error("Google OAuth failed: ", error);
       setError("Google login failed. Please try again.");
     },
     flow: "implicit",

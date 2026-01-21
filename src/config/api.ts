@@ -23,6 +23,12 @@ export const API_ENDPOINTS = {
     list: `${API_BASE_URL}/enrollments.php`,
     unenroll: `${API_BASE_URL}/unenroll.php`,
   },
+
+  // Admin
+  admin: {
+    users: `${API_BASE_URL}/users.php`,
+    userCourses: `${API_BASE_URL}/user-courses.php`,
+  },
 } as const;
 
 export { API_BASE_URL };

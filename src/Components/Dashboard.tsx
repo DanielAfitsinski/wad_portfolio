@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import type { User, Course, EnrolledCourse } from "../types";
 import { authService } from "../services/authService";
 import { courseService } from "../services/courseService";
+import { EnrolledCoursesSection } from "./EnrolledCoursesSection";
+import { AvailableCoursesSection } from "./AvailableCoursesSection";
+import { Navbar } from "./Navbar";
 
 export function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -62,8 +65,22 @@ export function Dashboard() {
     } catch (error: any) {
       console.error(
         "Unenrollment failed: ",
-        error.response?.data?.error || error.message
+        error.response?.data?.error || error.message,
       );
+    }
+  };
+
+  const refreshData = async () => {
+    if (!user) return;
+    try {
+      const [updatedCourses, updatedEnrolled] = await Promise.all([
+        courseService.getAvailableCourses(),
+        courseService.getEnrolledCourses(user.id),
+      ]);
+      setCourses(updatedCourses);
+      setEnrolledCourses(updatedEnrolled);
+    } catch (error) {
+      console.error("Failed to refresh data: ", error);
     }
   };
 
@@ -90,161 +107,18 @@ export function Dashboard() {
 
   return (
     <div className="bg-light min-vh-100">
-      <div style={{ backgroundColor: "#2c3e50", height: "60px" }}></div>
+      <Navbar user={user} onLogout={handleLogout} onRefresh={refreshData} />
 
-      <div className="container-fluid py-5">
-        <div className="row mb-4">
-          <div className="col-12 d-flex justify-content-between align-items-center">
-            <div>
-              <h1 className="h3 mb-1">Welcome, {user.name}!</h1>
-              <p className="text-muted mb-0">
-                Explore courses and manage your bookings
-              </p>
-            </div>
-            <button onClick={handleLogout} className="btn btn-danger">
-              Logout
-            </button>
-          </div>
-        </div>
+      <EnrolledCoursesSection
+        courses={enrolledCourses}
+        onUnenroll={handleUnenroll}
+      />
 
-        <div className="row mb-5">
-          <div className="col-12">
-            <h2 className="h4 fw-bold text-dark mb-3">Your Enrolled Courses</h2>
-            {enrolledCourses.length ? (
-              <div className="row g-3">
-                {enrolledCourses.map((course) => (
-                  <div key={course.enrollmentId} className="col-md-6">
-                    <div className="card shadow-sm border-0 h-100">
-                      <div className="card-body d-flex flex-column">
-                        <h5 className="card-title text-primary mb-2">
-                          {course.title}
-                        </h5>
-                        <p className="mb-1 small">
-                          <strong>Instructor:</strong> {course.instructor}
-                        </p>
-                        <p className="mb-1 small">
-                          <strong>Duration:</strong> {course.duration}
-                        </p>
-                        <p className="mb-2 small text-muted">
-                          Enrolled on:{" "}
-                          {new Date(course.enrollmentDate).toLocaleDateString()}
-                        </p>
-                        <div className="mt-auto d-flex justify-content-between align-items-center">
-                          <span className="badge bg-info">
-                            {course.enrolled} of {course.capacity} spaces
-                          </span>
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => handleUnenroll(course.enrollmentId)}
-                          >
-                            Remove Booking
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="alert alert-info">
-                You’re not enrolled in any courses yet.
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-12">
-            <h2 className="h4 fw-bold text-dark mb-3">Available Courses</h2>
-            <div className="row g-4">
-              {courses.map((course) => {
-                const isFull = course.enrolled >= course.capacity;
-                const isEnrolled = enrolledCourseIds.has(course.id);
-                const percent = Math.round(
-                  (course.enrolled / course.capacity) * 100
-                );
-
-                return (
-                  <div key={course.id} className="col-md-6 col-lg-4">
-                    <div className="card h-100 shadow-sm border-0">
-                      <div className="card-body d-flex flex-column">
-                        <h5 className="card-title text-primary">
-                          {course.title}
-                        </h5>
-                        <p className="card-text text-muted small flex-grow-1">
-                          {course.description}
-                        </p>
-
-                        <div className="mb-3">
-                          <p className="mb-1 small">
-                            <strong>Instructor:</strong> {course.instructor}
-                          </p>
-                          <p className="mb-0 small">
-                            <strong>Duration:</strong> {course.duration}
-                          </p>
-                        </div>
-
-                        <div className="mb-3">
-                          <div className="d-flex justify-content-between align-items-center mb-1">
-                            <span className="small fw-bold">Enrollment</span>
-                            <span
-                              className={`badge ${
-                                isFull ? "bg-danger" : "bg-info"
-                              }`}
-                            >
-                              {course.enrolled} of {course.capacity} spaces
-                            </span>
-                          </div>
-                          <div className="progress" style={{ height: "6px" }}>
-                            <div
-                              className={`progress-bar ${
-                                isFull ? "bg-danger" : "bg-success"
-                              }`}
-                              role="progressbar"
-                              style={{ width: `${percent}%` }}
-                              aria-valuenow={course.enrolled}
-                              aria-valuemin={0}
-                              aria-valuemax={course.capacity}
-                            />
-                          </div>
-                          <p className="mt-2 mb-0 small text-muted">
-                            {isFull ? (
-                              <span className="text-danger fw-bold">
-                                Course is Full
-                              </span>
-                            ) : (
-                              <span>
-                                {course.capacity - course.enrolled} spot(s)
-                                available
-                              </span>
-                            )}
-                          </p>
-                        </div>
-
-                        <button
-                          className={`btn w-100 ${
-                            isFull || isEnrolled
-                              ? "btn-secondary"
-                              : "btn-primary"
-                          }`}
-                          disabled={isFull || isEnrolled}
-                          onClick={() => handleEnroll(course.id)}
-                        >
-                          {isEnrolled
-                            ? "Enrolled"
-                            : isFull
-                            ? "Course Full"
-                            : "Enroll"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+      <AvailableCoursesSection
+        courses={courses}
+        enrolledCourseIds={enrolledCourseIds}
+        onEnroll={handleEnroll}
+      />
     </div>
   );
 }

@@ -5,8 +5,8 @@ require_once __DIR__ . '/../common/cors.php';
 
 class EnrollmentController {
     public static function enroll() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -107,8 +107,8 @@ class EnrollmentController {
     }
 
     public static function getEnrollments() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['GET']);
+        
         validateMethod('GET');
 
         if (!isset($_GET['user_id']) || !is_numeric($_GET['user_id'])) {
@@ -154,8 +154,8 @@ class EnrollmentController {
     }
 
     public static function unenroll() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $input = json_decode(file_get_contents('php://input'), true);

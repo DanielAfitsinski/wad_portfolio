@@ -6,8 +6,8 @@ require_once __DIR__ . '/../common/cors.php';
 class CourseController {
     
     public static function getCourses() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['GET']);
+        
         validateMethod('GET');
 
         try{
@@ -18,13 +18,14 @@ class CourseController {
                     c.id,
                     c.title,
                     c.description,
+                    c.full_description,
                     c.instructor,
                     c.duration,
                     c.capacity,
                     COUNT(ce.id) AS enrolled
                 FROM courses c
                 LEFT JOIN course_enrollments ce ON c.id = ce.course_id
-                GROUP BY c.id, c.title, c.description, c.instructor, c.duration, c.capacity
+                GROUP BY c.id, c.title, c.description, c.full_description, c.instructor, c.duration, c.capacity
                 ORDER BY c.id
             ");
 

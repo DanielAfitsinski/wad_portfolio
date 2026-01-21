@@ -4,9 +4,8 @@ import type { User, ApiResponse } from "../types";
 export const authService = {
   // Get the current logged-in user
   async verifyAuth(): Promise<User> {
-    const response = await axiosInstance.get<ApiResponse<User>>(
-      "/verify-auth.php"
-    );
+    const response =
+      await axiosInstance.get<ApiResponse<User>>("/verify-auth.php");
     return response.data.user!;
   },
   // login with email and password

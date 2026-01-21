@@ -26,7 +26,7 @@ export function Login() {
         setLockTimeRemaining(error.response.data.lockedUntil || 5);
         setError(
           error.response.data.message ||
-            "Too many failed attempts. Please try again later."
+            "Too many failed attempts. Please try again later.",
         );
       } else {
         console.error("Login failed:", error.response?.data?.error);

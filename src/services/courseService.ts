@@ -2,16 +2,21 @@ import axiosInstance from "./axiosInstance";
 import type { Course, EnrolledCourse, ApiResponse } from "../types";
 
 export const courseService = {
+  async getCourses(): Promise<Course[]> {
+    const response =
+      await axiosInstance.get<ApiResponse<Course[]>>("/courses.php");
+    return response.data.data || [];
+  },
+
   async getAvailableCourses(): Promise<Course[]> {
-    const response = await axiosInstance.get<ApiResponse<Course[]>>(
-      "/courses.php"
-    );
+    const response =
+      await axiosInstance.get<ApiResponse<Course[]>>("/courses.php");
     return response.data.data || [];
   },
 
   async getEnrolledCourses(userId: number): Promise<EnrolledCourse[]> {
     const response = await axiosInstance.get<ApiResponse<EnrolledCourse[]>>(
-      `/enrollments.php?user_id=${userId}`
+      `/enrollments.php?user_id=${userId}`,
     );
     return response.data.data || [];
   },

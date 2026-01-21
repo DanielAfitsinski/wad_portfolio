@@ -6,8 +6,7 @@ class AuthController {
     
 
     public static function login() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
         validateMethod('POST');
         
         $input = json_decode(file_get_contents('php://input'), true);
@@ -61,8 +60,8 @@ class AuthController {
                     'message' => "Too many failed login attempts. Please try again in $minutesRemaining minute(s)."
                 ]);
                 
-                $stmt = $pdo->prepare("INSERT INTO login_attempts (email, success, ip_address, user_agent) VALUES (?, FALSE, ?, ?)");
-                $stmt->execute([$email, $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null]);
+                $stmt = $pdo->prepare("INSERT INTO login_attempts (email, success) VALUES (?, FALSE)");
+                $stmt->execute([$email]);
                 exit();
             }
 
@@ -72,8 +71,8 @@ class AuthController {
             $user = $stmt->fetch();
 
             if(!$user || !password_verify($password, $user['password_hash'])){
-                $stmt = $pdo->prepare("INSERT INTO login_attempts (user_id, email, success, ip_address, user_agent) VALUES (?, ?, FALSE, ?, ?)");
-                $stmt->execute([$user['id'] ?? null, $email, $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null]);
+                $stmt = $pdo->prepare("INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, FALSE)");
+                $stmt->execute([$user['id'] ?? null, $email]);
                 
                 http_response_code(401);
                 echo json_encode(['error' => 'Unauthorised: Invalid email or password']);
@@ -89,18 +88,15 @@ class AuthController {
             $token = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-            $stmt = $pdo->prepare("INSERT INTO auth_tokens (user_id, token, expires_at, ip_address, user_agent) 
-            VALUES (?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
             $stmt->execute([
                 $user['id'],
                 $token,
-                $expiresAt,
-                $_SERVER['REMOTE_ADDR'] ?? null,
-                $_SERVER['HTTP_USER_AGENT'] ?? null
+                $expiresAt
             ]);
 
-            $stmt = $pdo->prepare("INSERT INTO login_attempts (user_id, email, success, ip_address, user_agent) VALUES (?, ?, TRUE, ?, ?)");
-            $stmt->execute([$user['id'], $email, $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null]);
+            $stmt = $pdo->prepare("INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, TRUE)");
+            $stmt->execute([$user['id'], $email]);
 
             $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
             $stmt->execute([$user['id']]);
@@ -131,8 +127,8 @@ class AuthController {
         }
     }
     public static function register() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -179,8 +175,8 @@ class AuthController {
     }
 
     public static function logout() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $token = $_COOKIE['authToken'] ?? null;
@@ -218,8 +214,8 @@ class AuthController {
     }
 
     public static function verifyAuth() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['GET']);
+        
         validateMethod('GET');
 
         $token = $_COOKIE['authToken'] ?? null;
@@ -265,14 +261,14 @@ class AuthController {
         }
     }
 
-    /**
-     * Forgot Password - Send Reset Link
-     */
+    
+      //Forgot Password - Send Reset Link
+     
     public static function forgotPassword() {
         require_once __DIR__ . '/../config/mail.php';
         
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -323,12 +319,12 @@ class AuthController {
         }
     }
 
-    /**
-     * Reset Password
-     */
+    
+     // Reset Password
+     
     public static function resetPassword() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -376,12 +372,10 @@ class AuthController {
         }
     }
 
-    /**
-     * Google Login
-     */
+    // Google Login
     public static function googleLogin() {
-        setCorsHeaders();
-        handlePreflight();
+        setCorsHeaders(['POST']);
+        
         validateMethod('POST');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -455,14 +449,11 @@ class AuthController {
             $authToken = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-            $stmt = $pdo->prepare("INSERT INTO auth_tokens (user_id, token, expires_at, ip_address, user_agent) 
-                                 VALUES (?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
             $stmt->execute([
                 $user['id'],
                 $authToken,
-                $expiresAt,
-                $_SERVER['REMOTE_ADDR'] ?? null,
-                $_SERVER['HTTP_USER_AGENT'] ?? null
+                $expiresAt
             ]);
 
             setcookie('authToken', $authToken, [

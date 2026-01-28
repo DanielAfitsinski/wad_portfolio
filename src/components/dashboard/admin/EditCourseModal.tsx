@@ -465,7 +465,8 @@ export function EditCourseModal({
                           <option value="">Choose a user...</option>
                           {availableUsers.map((user) => (
                             <option key={user.id} value={user.id}>
-                              {user.name} ({user.email}) - {user.role}
+                              {user.first_name} {user.last_name} ({user.email})
+                              - {user.role}
                             </option>
                           ))}
                         </select>

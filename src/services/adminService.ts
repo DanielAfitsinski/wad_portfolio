@@ -2,7 +2,8 @@ import axiosInstance from "./axiosInstance";
 import type { User, ApiResponse } from "../types";
 
 export interface CreateUserData {
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
   job_title: string;
@@ -12,7 +13,8 @@ export interface CreateUserData {
 
 export interface UpdateUserData {
   id: number;
-  name?: string;
+  first_name?: string;
+  last_name?: string;
   email?: string;
   job_title?: string;
   role?: "user" | "admin";

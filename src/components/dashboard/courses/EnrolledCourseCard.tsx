@@ -10,28 +10,28 @@ export function EnrolledCourseCard({
   onUnenroll,
 }: EnrolledCourseCardProps) {
   return (
-    <div className="col-md-6">
-      <div className="card shadow-sm border-0 h-100">
-        <div className="card-body d-flex flex-column">
-          <h5 className="card-title text-primary mb-2">{course.title}</h5>
-          <p className="mb-1 small">
+    <div className="col-md-6 mb-3">
+      <div className="card h-100">
+        <div className="card-body">
+          <h5 className="card-title">{course.title}</h5>
+          <p className="mb-1">
             <strong>Instructor:</strong> {course.instructor}
           </p>
-          <p className="mb-1 small">
+          <p className="mb-1">
             <strong>Duration:</strong> {course.duration}
           </p>
-          <p className="mb-2 small text-muted">
-            Enrolled on: {new Date(course.enrollmentDate).toLocaleDateString()}
+          <p className="mb-2 text-muted">
+            Enrolled: {new Date(course.enrollmentDate).toLocaleDateString()}
           </p>
-          <div className="mt-auto d-flex justify-content-between align-items-center">
-            <span className="badge bg-info">
-              {course.enrolled} of {course.capacity} spaces
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="badge bg-primary">
+              {course.enrolled}/{course.capacity}
             </span>
             <button
-              className="btn btn-outline-danger btn-sm"
+              className="btn btn-danger btn-sm"
               onClick={() => onUnenroll(course.enrollmentId)}
             >
-              Remove Booking
+              Unenroll
             </button>
           </div>
         </div>

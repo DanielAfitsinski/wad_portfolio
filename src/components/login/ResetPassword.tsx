@@ -100,69 +100,66 @@ export function ResetPassword() {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-      <div className="w-100" style={{ maxWidth: "28rem" }}>
-        <div className="card border-0 shadow-lg">
-          <div className="card-body p-5">
-            <h1 className="card-title text-3xl fw-bold text-center mb-4">
-              Set New Password
-            </h1>
+    <div className="container">
+      <div className="row justify-content-center mt-5">
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="card-title text-center mb-4">Reset Password</h2>
 
-            {uiState.error && (
-              <div
-                className="alert alert-danger alert-dismissible fade show"
-                role="alert"
-              >
-                {uiState.error}
-              </div>
-            )}
-
-            {!uiState.tokenValid ? (
-              <p className="text-danger">Invalid or expired reset link</p>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="password" className="form-label fw-medium">
-                    New Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Enter new password"
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label
-                    htmlFor="confirmPassword"
-                    className="form-label fw-medium"
-                  >
-                    Confirm Password
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Confirm password"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={uiState.loading}
-                  className="btn btn-primary w-100 fw-semibold"
+              {uiState.error && (
+                <div
+                  className="alert alert-danger alert-dismissible fade show"
+                  role="alert"
                 >
-                  {uiState.loading ? "Resetting..." : "Reset Password"}
-                </button>
-              </form>
-            )}
+                  {uiState.error}
+                </div>
+              )}
+
+              {!uiState.tokenValid ? (
+                <p className="text-danger">Invalid or expired reset link</p>
+              ) : (
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">
+                      New Password
+                    </label>
+                    <input
+                      id="password"
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="confirmPassword" className="form-label">
+                      Confirm Password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="Confirm password"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={uiState.loading}
+                    className="btn btn-primary w-100"
+                  >
+                    {uiState.loading ? "Resetting..." : "Reset Password"}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </div>

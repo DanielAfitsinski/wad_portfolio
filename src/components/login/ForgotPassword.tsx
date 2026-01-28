@@ -68,70 +68,73 @@ export function ForgotPassword() {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-      <div className="w-100" style={{ maxWidth: "28rem" }}>
-        <div className="card border-0 shadow-lg">
-          <div className="card-body p-5">
-            <h1 className="card-title text-3xl fw-bold text-center mb-4">
-              Reset Password
-            </h1>
+    <div className="container">
+      <div className="row justify-content-center mt-5">
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="card-title text-center mb-4">Forgot Password</h2>
 
-            {error && (
-              <div
-                className="alert alert-danger alert-dismissible fade show"
-                role="alert"
-              >
-                {error}
-              </div>
-            )}
+              {error && (
+                <div
+                  className="alert alert-danger alert-dismissible fade show"
+                  role="alert"
+                >
+                  {error}
+                </div>
+              )}
 
-            {success && (
-              <div
-                className="alert alert-success alert-dismissible fade show"
-                role="alert"
-              >
-                {success}
-              </div>
-            )}
+              {success && (
+                <div
+                  className="alert alert-success alert-dismissible fade show"
+                  role="alert"
+                >
+                  {success}
+                </div>
+              )}
 
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label fw-medium">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  className={`form-control ${emailError ? "is-invalid" : email ? "is-valid" : ""}`}
-                  placeholder="Enter your email"
-                  disabled={loading}
-                />
-                {emailError && (
-                  <div className="invalid-feedback d-block">{emailError}</div>
-                )}
-              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    className={`form-control ${emailError ? "is-invalid" : email ? "is-valid" : ""}`}
+                    placeholder="Enter your email"
+                    disabled={loading}
+                  />
+                  {emailError && (
+                    <div className="invalid-feedback d-block">{emailError}</div>
+                  )}
+                </div>
 
-              <button
-                type="submit"
-                disabled={loading || !!emailError || !email}
-                className="btn btn-primary w-100 fw-semibold"
-              >
-                {loading ? "Sending..." : "Send Reset Link"}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading || !!emailError || !email}
+                  className="btn btn-primary w-100"
+                >
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </button>
+              </form>
 
-            <p className="text-center text-muted small mt-4">
-              Remember your password?{" "}
-              <span
-                onClick={() => navigate("/")}
-                className="text-primary cursor-pointer text-decoration-none fw-medium"
-                style={{ cursor: "pointer" }}
-              >
-                Sign in
-              </span>
-            </p>
+              <p className="text-center mt-3">
+                Remember your password?{" "}
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/");
+                  }}
+                  className="text-decoration-none"
+                >
+                  Back to Login
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>

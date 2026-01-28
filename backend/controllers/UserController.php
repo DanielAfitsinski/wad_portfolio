@@ -11,7 +11,7 @@ class UserController {
     public function getAllUsers() {
         try {
             $users = $this->db->query("
-                SELECT id, name, email, job_title, role, is_active, created_at, last_login 
+                SELECT id, first_name, last_name, email, job_title, role, is_active, created_at, last_login 
                 FROM users 
                 ORDER BY created_at DESC
             ");
@@ -31,18 +31,19 @@ class UserController {
   
     public function createUser($data) {
         try {
-            $name = trim($data['name'] ?? '');
+            $first_name = trim($data['first_name'] ?? '');
+            $last_name = trim($data['last_name'] ?? '');
             $email = trim($data['email'] ?? '');
             $password = $data['password'] ?? '';
             $job_title = trim($data['job_title'] ?? '');
             $role = $data['role'] ?? 'user';
             $is_active = $data['is_active'] ?? true;
             
-            if (empty($name) || empty($email) || empty($password)) {
+            if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
-                    'error' => 'Name, email, and password are required'
+                    'error' => 'First name, last name, email, and password are required'
                 ]);
             }
             
@@ -77,15 +78,15 @@ class UserController {
             
             // Create user
             $this->db->execute("
-                INSERT INTO users (name, email, job_title, password_hash, role, is_active, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, NOW())
-            ", [$name, $email, $job_title ?: 'User', $password_hash, $role, $is_active ? 1 : 0]);
+                INSERT INTO users (first_name, last_name, email, job_title, password_hash, role, is_active, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            ", [$first_name, $last_name, $email, $job_title ?: 'User', $password_hash, $role, $is_active ? 1 : 0]);
             
             $userId = $this->db->lastInsertId();
             
             // Fetch created user
             $user = $this->db->queryOne("
-                SELECT id, name, email, job_title, role, is_active, created_at 
+                SELECT id, first_name, last_name, email, job_title, role, is_active, created_at 
                 FROM users WHERE id = ?
             ", [$userId]);
             
@@ -108,7 +109,8 @@ class UserController {
     public function updateUser($data) {
         try {
             $userId = $data['id'] ?? null;
-            $name = trim($data['name'] ?? '');
+            $first_name = isset($data['first_name']) ? trim($data['first_name']) : null;
+            $last_name = isset($data['last_name']) ? trim($data['last_name']) : null;
             $email = trim($data['email'] ?? '');
             $job_title = isset($data['job_title']) ? trim($data['job_title']) : null;
             $role = $data['role'] ?? 'user';
@@ -126,9 +128,14 @@ class UserController {
             $updates = [];
             $params = [];
             
-            if (!empty($name)) {
-                $updates[] = "name = ?";
-                $params[] = $name;
+            if ($first_name !== null) {
+                $updates[] = "first_name = ?";
+                $params[] = $first_name;
+            }
+            
+            if ($last_name !== null) {
+                $updates[] = "last_name = ?";
+                $params[] = $last_name;
             }
             
             if (!empty($email)) {
@@ -172,7 +179,7 @@ class UserController {
             
             // Fetch updated user
             $user = $this->db->queryOne("
-                SELECT id, name, email, job_title, role, is_active, created_at, last_login 
+                SELECT id, first_name, last_name, email, job_title, role, is_active, created_at, last_login 
                 FROM users WHERE id = ?
             ", [$userId]);
             
@@ -242,7 +249,7 @@ class UserController {
                     e.user_id,
                     e.course_id,
                     e.enrolled_at,
-                    u.name as user_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name,
                     u.email as user_email,
                     c.title as course_title
                 FROM course_enrollments e

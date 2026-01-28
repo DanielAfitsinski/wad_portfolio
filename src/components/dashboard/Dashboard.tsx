@@ -110,8 +110,8 @@ export function Dashboard() {
 
   if (loading || !user) {
     return (
-      <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-        <div className="spinner-border text-primary" role="status">
+      <div className="container text-center mt-5">
+        <div className="spinner-border" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -121,7 +121,7 @@ export function Dashboard() {
   const enrolledCourseIds = new Set(enrolledCourses.map((c) => c.id));
 
   return (
-    <div className="bg-light min-vh-100">
+    <div>
       <Navbar user={user} onLogout={handleLogout} onRefresh={refreshData} />
 
       <EnrolledCoursesSection

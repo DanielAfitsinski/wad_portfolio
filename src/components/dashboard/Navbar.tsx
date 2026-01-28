@@ -12,37 +12,23 @@ export function Navbar({ user, onLogout, onRefresh }: NavbarProps) {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   return (
     <>
-      <nav
-        className="navbar navbar-expand-lg navbar-dark  shadow-sm"
-        style={{
-          background: "linear-gradient(135deg, #2d5a8c 0%, #1e3a5f 100%)",
-        }}
-      >
-        <div className="container-fluid px-4">
-          <span className="navbar-brand mb-0 h1 fw-bold">Course Portal</span>
+      <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div className="container-fluid">
+          <span className="navbar-brand mb-0 h1 fw-bold">TechCourses4U</span>
 
-          <div className="d-flex align-items-center gap-3">
-            <div className="text-end d-none d-md-block">
-              <div>
-                <span className="text-white fw-semibold d-block">
-                  {user.name}
-                </span>
-                <span className="text-white-50 small d-block">
-                  {user.job_title}
-                </span>
-              </div>
-            </div>
+          <div className="d-flex align-items-center">
+            <span className="navbar-text me-3">
+              {user.first_name} {user.last_name} - {user.job_title}
+            </span>
             {user.role === "admin" && (
               <button
                 onClick={() => setShowAdminPanel(true)}
-                className="btn btn-outline-light btn-sm"
-                title="Admin Panel"
+                className="btn btn-light me-2"
               >
-                <i className="bi bi-gear-fill me-1"></i>
                 Admin
               </button>
             )}
-            <button onClick={onLogout} className="btn btn-outline-light btn-sm">
+            <button onClick={onLogout} className="btn btn-light">
               Logout
             </button>
           </div>

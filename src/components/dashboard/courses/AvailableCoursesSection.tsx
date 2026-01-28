@@ -17,21 +17,19 @@ export function AvailableCoursesSection({
   onEdit,
 }: AvailableCoursesSectionProps) {
   return (
-    <div className="row">
-      <div className="col-12">
-        <h2 className="h4 fw-bold text-dark mb-3">Available Courses</h2>
-        <div className="row g-4">
-          {courses.map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
-              isEnrolled={enrolledCourseIds.has(course.id)}
-              isAdmin={isAdmin}
-              onEnroll={onEnroll}
-              onEdit={onEdit}
-            />
-          ))}
-        </div>
+    <div className="container mt-4">
+      <h2>Available Courses</h2>
+      <div className="row">
+        {courses.map((course) => (
+          <CourseCard
+            key={course.id}
+            course={course}
+            isEnrolled={enrolledCourseIds.has(course.id)}
+            isAdmin={isAdmin}
+            onEnroll={onEnroll}
+            onEdit={onEdit}
+          />
+        ))}
       </div>
     </div>
   );

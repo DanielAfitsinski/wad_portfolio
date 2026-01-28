@@ -21,80 +21,73 @@ export function CourseCard({
   const percent = Math.round((course.enrolled / course.capacity) * 100);
 
   return (
-    <div className="col-md-6 col-lg-4">
-      <div className="card h-100 shadow-sm border-0">
-        <div className="card-body d-flex flex-column">
-          <h5 className="card-title text-primary">{course.title}</h5>
-          <p className="card-text text-muted small flex-grow-1">
+    <div className="col-md-6 col-lg-4 mb-3">
+      <div className="card h-100">
+        <div className="card-body">
+          <h5 className="card-title">{course.title}</h5>
+          <p className="card-text">
             {isExpanded && course.full_description
               ? course.full_description
               : course.description}
           </p>
 
           <div className="mb-3">
-            <p className="mb-1 small">
+            <p className="mb-1">
               <strong>Instructor:</strong> {course.instructor}
             </p>
-            <p className="mb-0 small">
+            <p className="mb-0">
               <strong>Duration:</strong> {course.duration}
             </p>
           </div>
 
           {course.full_description && (
             <button
-              className="btn btn-link btn-sm p-0 mb-3 text-decoration-none"
+              className="btn btn-link p-0 mb-3"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {isExpanded ? "Show Less ▲" : "View Full Course Details ▼"}
+              {isExpanded ? "Show Less" : "Show More"}
             </button>
           )}
 
           <div className="mb-3">
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="small fw-bold">Enrollment</span>
-              <span className={`badge ${isFull ? "bg-danger" : "bg-info"}`}>
-                {course.enrolled} of {course.capacity} spaces
+            <div className="d-flex justify-content-between mb-2">
+              <span>Enrollment</span>
+              <span className={`badge ${isFull ? "bg-danger" : "bg-primary"}`}>
+                {course.enrolled}/{course.capacity}
               </span>
             </div>
-            <div className="progress" style={{ height: "6px" }}>
+            <div className="progress">
               <div
                 className={`progress-bar ${isFull ? "bg-danger" : "bg-success"}`}
-                role="progressbar"
                 style={{ width: `${percent}%` }}
-                aria-valuenow={course.enrolled}
-                aria-valuemin={0}
-                aria-valuemax={course.capacity}
               />
             </div>
-            <p className="mt-2 mb-0 small text-muted">
+            <p className="mt-2 mb-0 small">
               {isFull ? (
-                <span className="text-danger fw-bold">Course is Full</span>
+                <span className="text-danger">Course Full</span>
               ) : (
-                <span>
-                  {course.capacity - course.enrolled} spot(s) available
-                </span>
+                <span>{course.capacity - course.enrolled} spots left</span>
               )}
             </p>
           </div>
 
-          <div className="d-flex gap-2">
+          <div>
             <button
-              className={`btn flex-grow-1 ${
+              className={`btn w-100 mb-2 ${
                 isFull || isEnrolled ? "btn-secondary" : "btn-primary"
               }`}
               disabled={isFull || isEnrolled}
               onClick={() => onEnroll(course.id)}
             >
-              {isEnrolled ? "Enrolled" : isFull ? "Course Full" : "Enroll"}
+              {isEnrolled ? "Enrolled" : isFull ? "Full" : "Enroll"}
             </button>
 
             {isAdmin && onEdit && (
               <button
-                className="btn btn-outline-primary"
+                className="btn btn-outline-primary w-100"
                 onClick={() => onEdit(course)}
-                title="Edit course"
               >
-                <i className="bi bi-pencil-square">Edit</i>
+                Edit
               </button>
             )}
           </div>

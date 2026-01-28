@@ -65,7 +65,7 @@ class AuthController {
 
             // Fetch user
             $user = $db->queryOne(
-                "SELECT id, email, password_hash, name, job_title, role, is_active FROM users WHERE email = ?",
+                "SELECT id, email, password_hash, first_name, last_name, job_title, role, is_active FROM users WHERE email = ?",
                 [$email]
             );
 
@@ -112,7 +112,8 @@ class AuthController {
                 'user' => [
                     'id' => $user['id'],
                     'email' => $user['email'],
-                    'name' => $user['name'],
+                    'first_name' => $user['first_name'],
+                    'last_name' => $user['last_name'],
                     'job_title' => $user['job_title'],
                     'role' => $user['role']
                 ]
@@ -131,20 +132,21 @@ class AuthController {
 
         $input = json_decode(file_get_contents('php://input'), true);
 
-        if(!isset($input['name']) || !isset($input['email']) || !isset($input['password'])){
+        if(!isset($input['first_name']) || !isset($input['last_name']) || !isset($input['email']) || !isset($input['password'])){
             http_response_code(400);
-            echo json_encode(['error' => 'Missing required fields: name, email, password']);
+            echo json_encode(['error' => 'Missing required fields: first_name, last_name, email, password']);
             exit();
         }
 
-        $name = trim($input['name']);
+        $first_name = trim($input['first_name']);
+        $last_name = trim($input['last_name']);
         $email = trim($input['email']);
         $password = $input['password'];
 
         // Validate name
-        if (empty($name)) {
+        if (empty($first_name) || empty($last_name)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Name cannot be empty']);
+            echo json_encode(['error' => 'First name and last name cannot be empty']);
             exit();
         }
 
@@ -181,9 +183,9 @@ class AuthController {
 
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
             $db->execute("
-                INSERT INTO users (name, email, job_title, password_hash, role, is_active) 
-                VALUES (?, ?, ?, ?, 'user', 1)
-            ", [$name, $email, 'User', $passwordHash]);
+                INSERT INTO users (first_name, last_name, email, job_title, password_hash, role, is_active) 
+                VALUES (?, ?, ?, ?, ?, 'user', 1)
+            ", [$first_name, $last_name, $email, 'User', $passwordHash]);
             http_response_code(201);
             echo json_encode([
                 'success' => true,
@@ -252,7 +254,7 @@ class AuthController {
             $db = self::getDB();
 
             $user = $db->queryOne("
-                SELECT u.id, u.email, u.name, u.job_title, u.role 
+                SELECT u.id, u.email, u.first_name, u.last_name, u.job_title, u.role 
                 FROM auth_tokens at
                 JOIN users u ON at.user_id = u.id
                 WHERE at.token = ? AND at.expires_at > NOW() AND u.is_active = 1
@@ -269,7 +271,8 @@ class AuthController {
                 'user' => [
                     'id' => $user['id'],
                     'email' => $user['email'],
-                    'name' => $user['name'],
+                    'first_name' => $user['first_name'],
+                    'last_name' => $user['last_name'],
                     'job_title' => $user['job_title'],
                     'role' => $user['role']
                 ]
@@ -315,7 +318,7 @@ class AuthController {
         try {
             $db = self::getDB();
             
-            $user = $db->queryOne("SELECT id, name FROM users WHERE email = ?", [$email]);
+            $user = $db->queryOne("SELECT id, first_name, last_name FROM users WHERE email = ?", [$email]);
             
             if(!$user){
                 http_response_code(200);
@@ -331,7 +334,8 @@ class AuthController {
                 VALUES (?, ?, ?)
             ", [$user['id'], $token, $expiresAt]);
             
-            $emailSent = sendPasswordResetEmail($email, $user['name'], $token);
+            $fullName = $user['first_name'] . ' ' . $user['last_name'];
+            $emailSent = sendPasswordResetEmail($email, $fullName, $token);
             
             if(!$emailSent){
                 error_log("Failed to send password reset email to $email");
@@ -443,17 +447,23 @@ class AuthController {
             $db = self::getDB();
 
             $user = $db->queryOne(
-                "SELECT id, email, name, job_title, role, is_active FROM users WHERE email = ?",
+                "SELECT id, email, first_name, last_name, job_title, role, is_active FROM users WHERE email = ?",
                 [$googleUser['email']]
             );
 
             if (!$user) {
+                $fullName = $googleUser['name'] ?? $googleUser['email'];
+                $nameParts = explode(' ', $fullName, 2);
+                $firstName = $nameParts[0];
+                $lastName = $nameParts[1] ?? '';
+                
                 $db->execute(
-                    "INSERT INTO users (email, name, job_title, password_hash, role, is_active, created_at, last_login) 
-                    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                    "INSERT INTO users (email, first_name, last_name, job_title, password_hash, role, is_active, created_at, last_login) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
                     [
                         $googleUser['email'],
-                        $googleUser['name'] ?? $googleUser['email'],
+                        $firstName,
+                        $lastName,
                         'User',
                         password_hash(uniqid(), PASSWORD_BCRYPT),
                         'user',
@@ -464,7 +474,7 @@ class AuthController {
                 $userId = $db->lastInsertId();
 
                 $user = $db->queryOne(
-                    "SELECT id, email, name, job_title, role, is_active FROM users WHERE id = ?",
+                    "SELECT id, email, first_name, last_name, job_title, role, is_active FROM users WHERE id = ?",
                     [$userId]
                 );
             } else {
@@ -499,7 +509,8 @@ class AuthController {
                 'user' => [
                     'id' => $user['id'],
                     'email' => $user['email'],
-                    'name' => $user['name'],
+                    'first_name' => $user['first_name'],
+                    'last_name' => $user['last_name'],
                     'job_title' => $user['job_title'],
                     'role' => $user['role']
                 ]

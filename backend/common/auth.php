@@ -22,7 +22,7 @@ function getCurrentUser() {
     
     try {
         $pdo = getDBConnection();
-        $stmt = $pdo->prepare("SELECT id, name, email, job_title, role FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, first_name, last_name, email, job_title, role FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         return $stmt->fetch();
     } catch (Exception $e) {
@@ -78,7 +78,7 @@ function verifyAuthToken() {
         $pdo = getDBConnection();
         
         $stmt = $pdo->prepare("
-            SELECT u.id, u.email, u.name, u.role 
+            SELECT u.id, u.email, u.first_name, u.last_name, u.role 
             FROM auth_tokens at
             JOIN users u ON at.user_id = u.id
             WHERE at.token = ? AND at.expires_at > NOW() AND u.is_active = 1

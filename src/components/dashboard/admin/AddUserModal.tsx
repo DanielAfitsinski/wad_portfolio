@@ -17,7 +17,8 @@ export function AddUserModal({
   onUserAdded,
 }: AddUserModalProps) {
   const [formData, setFormData] = useState<CreateUserData>({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password: "",
     job_title: "",
@@ -54,7 +55,8 @@ export function AddUserModal({
 
   const handleClose = () => {
     setFormData({
-      name: "",
+      first_name: "",
+      last_name: "",
       email: "",
       password: "",
       job_title: "",
@@ -99,16 +101,33 @@ export function AddUserModal({
               )}
 
               <div className="mb-3">
-                <label htmlFor="userName" className="form-label">
-                  Name
+                <label htmlFor="userFirstName" className="form-label">
+                  First Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
-                  id="userName"
-                  value={formData.name}
+                  id="userFirstName"
+                  value={formData.first_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({ ...formData, first_name: e.target.value })
+                  }
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="userLastName" className="form-label">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="userLastName"
+                  value={formData.last_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, last_name: e.target.value })
                   }
                   required
                   disabled={loading}

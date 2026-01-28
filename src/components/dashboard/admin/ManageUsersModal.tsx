@@ -23,13 +23,15 @@ export function ManageUsersModal({
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editFormData, setEditFormData] = useState<UpdateUserData>({
     id: 0,
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     job_title: "",
     role: "user",
     is_active: true,
   });
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (show) {
@@ -54,7 +56,8 @@ export function ManageUsersModal({
     setEditingUser(user);
     setEditFormData({
       id: user.id,
-      name: user.name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       email: user.email,
       job_title: user.job_title || "",
       role: user.role as "user" | "admin",
@@ -65,6 +68,7 @@ export function ManageUsersModal({
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSaving(true);
     try {
       await adminService.updateUser(editFormData);
       setEditingUser(null);
@@ -72,6 +76,8 @@ export function ManageUsersModal({
       onRefresh?.();
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update user");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -142,7 +148,8 @@ export function ManageUsersModal({
                     <table className="table table-hover">
                       <thead className="table-light">
                         <tr>
-                          <th>Name</th>
+                          <th>First Name</th>
+                          <th>Last Name</th>
                           <th>Email</th>
                           <th>Job Title</th>
                           <th>Role</th>
@@ -159,11 +166,24 @@ export function ManageUsersModal({
                                   <input
                                     type="text"
                                     className="form-control form-control-sm"
-                                    value={editFormData.name}
+                                    value={editFormData.first_name || ""}
                                     onChange={(e) =>
                                       setEditFormData({
                                         ...editFormData,
-                                        name: e.target.value,
+                                        first_name: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    value={editFormData.last_name || ""}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        last_name: e.target.value,
                                       })
                                     }
                                   />
@@ -227,25 +247,49 @@ export function ManageUsersModal({
                                   </div>
                                 </td>
                                 <td>
-                                  <button
-                                    className="btn btn-sm btn-success me-1"
-                                    onClick={handleEditSubmit}
-                                  >
-                                    <i className="bi bi-check-lg me-1"></i>
-                                    Save
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-secondary"
-                                    onClick={() => setEditingUser(null)}
-                                  >
-                                    <i className="bi bi-x-lg me-1"></i>
-                                    Cancel
-                                  </button>
+                                  <div className="d-flex gap-2">
+                                    <button
+                                      className="btn btn-sm btn-outline-success px-3"
+                                      onClick={handleEditSubmit}
+                                      disabled={saving}
+                                      style={{
+                                        minWidth: '80px',
+                                        fontWeight: '500',
+                                        transition: 'all 0.2s ease',
+                                      }}
+                                    >
+                                      {saving ? (
+                                        <>
+                                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                          Saving...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <i className="bi bi-check-circle-fill me-1"></i>
+                                          Save
+                                        </>
+                                      )}
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-outline-secondary px-3"
+                                      onClick={() => setEditingUser(null)}
+                                      disabled={saving}
+                                      style={{
+                                        minWidth: '80px',
+                                        fontWeight: '500',
+                                        transition: 'all 0.2s ease',
+                                      }}
+                                    >
+                                      <i className="bi bi-x-circle me-1"></i>
+                                      Cancel
+                                    </button>
+                                  </div>
                                 </td>
                               </>
                             ) : (
                               <>
-                                <td>{user.name}</td>
+                                <td>{user.first_name}</td>
+                                <td>{user.last_name}</td>
                                 <td>{user.email}</td>
                                 <td>{user.job_title || "-"}</td>
                                 <td>

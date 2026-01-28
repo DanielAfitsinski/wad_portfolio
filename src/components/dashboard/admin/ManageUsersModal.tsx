@@ -253,14 +253,18 @@ export function ManageUsersModal({
                                       onClick={handleEditSubmit}
                                       disabled={saving}
                                       style={{
-                                        minWidth: '80px',
-                                        fontWeight: '500',
-                                        transition: 'all 0.2s ease',
+                                        minWidth: "80px",
+                                        fontWeight: "500",
+                                        transition: "all 0.2s ease",
                                       }}
                                     >
                                       {saving ? (
                                         <>
-                                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                          <span
+                                            className="spinner-border spinner-border-sm me-1"
+                                            role="status"
+                                            aria-hidden="true"
+                                          ></span>
                                           Saving...
                                         </>
                                       ) : (
@@ -275,9 +279,9 @@ export function ManageUsersModal({
                                       onClick={() => setEditingUser(null)}
                                       disabled={saving}
                                       style={{
-                                        minWidth: '80px',
-                                        fontWeight: '500',
-                                        transition: 'all 0.2s ease',
+                                        minWidth: "80px",
+                                        fontWeight: "500",
+                                        transition: "all 0.2s ease",
                                       }}
                                     >
                                       <i className="bi bi-x-circle me-1"></i>

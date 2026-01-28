@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
-import { authService } from "../services/authService";
+import { authService } from "../../services/authService";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -83,6 +83,7 @@ export function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="form-control"
                   placeholder="Enter your email"
+                  required
                 />
               </div>
 
@@ -97,6 +98,8 @@ export function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="form-control"
                   placeholder="Enter your password"
+                  required
+                  minLength={6}
                 />
               </div>
 
@@ -159,17 +162,6 @@ export function Login() {
               </svg>
               Sign in with Google
             </button>
-
-            <p className="text-center text-muted small mt-4">
-              Don't have an account?{" "}
-              <span
-                onClick={() => navigate("/register")}
-                className="text-primary cursor-pointer text-decoration-none fw-medium"
-                style={{ cursor: "pointer" }}
-              >
-                Sign up
-              </span>
-            </p>
           </div>
         </div>
       </div>

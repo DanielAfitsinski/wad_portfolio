@@ -22,7 +22,7 @@ function getCurrentUser() {
     
     try {
         $pdo = getDBConnection();
-        $stmt = $pdo->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, name, email, job_title, role FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         return $stmt->fetch();
     } catch (Exception $e) {
@@ -64,7 +64,7 @@ function requireAdmin() {
     }
 }
 
-// Token-based authentication functions
+// Token authentication
 function verifyAuthToken() {
     $token = $_COOKIE['authToken'] ?? null;
     

@@ -1,16 +1,20 @@
-import type { Course } from "../types";
+import type { Course } from "../../../types";
 import { CourseCard } from "./CourseCard";
 
 interface AvailableCoursesSectionProps {
   courses: Course[];
   enrolledCourseIds: Set<number>;
+  isAdmin?: boolean;
   onEnroll: (courseId: number) => void;
+  onEdit?: (course: Course) => void;
 }
 
 export function AvailableCoursesSection({
   courses,
   enrolledCourseIds,
+  isAdmin = false,
   onEnroll,
+  onEdit,
 }: AvailableCoursesSectionProps) {
   return (
     <div className="row">
@@ -22,7 +26,9 @@ export function AvailableCoursesSection({
               key={course.id}
               course={course}
               isEnrolled={enrolledCourseIds.has(course.id)}
+              isAdmin={isAdmin}
               onEnroll={onEnroll}
+              onEdit={onEdit}
             />
           ))}
         </div>

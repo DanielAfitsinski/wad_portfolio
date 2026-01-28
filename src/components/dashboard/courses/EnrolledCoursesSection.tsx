@@ -1,4 +1,4 @@
-import type { EnrolledCourse } from "../types";
+import type { EnrolledCourse } from "../../../types";
 import { EnrolledCourseCard } from "./EnrolledCourseCard";
 
 interface EnrolledCoursesSectionProps {

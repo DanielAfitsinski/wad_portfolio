@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { adminService, type CreateUserData } from "../services/adminService";
+
+import {
+  adminService,
+  type CreateUserData,
+} from "../../../services/adminService";
 
 interface AddUserModalProps {
   show: boolean;
@@ -16,6 +20,7 @@ export function AddUserModal({
     name: "",
     email: "",
     password: "",
+    job_title: "",
     role: "user",
     is_active: true,
   });
@@ -52,6 +57,7 @@ export function AddUserModal({
       name: "",
       email: "",
       password: "",
+      job_title: "",
       role: "user",
       is_active: true,
     });
@@ -121,6 +127,24 @@ export function AddUserModal({
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="userJobTitle" className="form-label">
+                  Job Title
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="userJobTitle"
+                  value={formData.job_title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, job_title: e.target.value })
+                  }
+                  placeholder="e.g., Software Engineer"
                   required
                   disabled={loading}
                 />

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { User } from "../types";
-import { AdminPanel } from "./AdminPanel";
+import type { User } from "../../types";
+import { AdminPanel } from "./admin/AdminPanel";
 
 interface NavbarProps {
   user: User;
@@ -10,7 +10,6 @@ interface NavbarProps {
 
 export function Navbar({ user, onLogout, onRefresh }: NavbarProps) {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-
   return (
     <>
       <nav
@@ -24,8 +23,14 @@ export function Navbar({ user, onLogout, onRefresh }: NavbarProps) {
 
           <div className="d-flex align-items-center gap-3">
             <div className="text-end d-none d-md-block">
-              <span className="text-white fw-semibold me-2">{user.name}</span>
-              <span className="text-white-50 small">{user.role}</span>
+              <div>
+                <span className="text-white fw-semibold d-block">
+                  {user.name}
+                </span>
+                <span className="text-white-50 small d-block">
+                  {user.job_title}
+                </span>
+              </div>
             </div>
             {user.role === "admin" && (
               <button

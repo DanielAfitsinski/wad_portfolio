@@ -4,6 +4,9 @@ require_once __DIR__ . '/../common/cors.php';
 
 class AuthController {
     
+    private static function getDB() {
+        return Database::getInstance();
+    }
 
     public static function login() {
         setCorsHeaders(['POST']);
@@ -24,30 +27,26 @@ class AuthController {
         define('LOCKOUT_DURATION_MINUTES', 5);
 
         try{
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            // Check if account is locked due to too many failed attempts
-            $stmt = $pdo->prepare("
+            // Check account lockout
+            $result = $db->queryOne("
                 SELECT COUNT(*) as failed_attempts
                 FROM login_attempts
                 WHERE email = ? 
                 AND success = FALSE
                 AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)
-            ");
-            $stmt->execute([$email, LOCKOUT_DURATION_MINUTES]);
-            $result = $stmt->fetch();
+            ", [$email, LOCKOUT_DURATION_MINUTES]);
             $failedAttempts = $result['failed_attempts'] ?? 0;
 
             if($failedAttempts >= MAX_ATTEMPTS){
-                $stmt = $pdo->prepare("
+                $oldestAttempt = $db->queryOne("
                     SELECT MIN(attempted_at) as oldest_attempt
                     FROM login_attempts
                     WHERE email = ? 
                     AND success = FALSE
                     AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)
-                ");
-                $stmt->execute([$email, LOCKOUT_DURATION_MINUTES]);
-                $oldestAttempt = $stmt->fetch();
+                ", [$email, LOCKOUT_DURATION_MINUTES]);
                 
                 $oldestTime = strtotime($oldestAttempt['oldest_attempt']);
                 $lockoutEnd = $oldestTime + (LOCKOUT_DURATION_MINUTES * 60);
@@ -60,19 +59,21 @@ class AuthController {
                     'message' => "Too many failed login attempts. Please try again in $minutesRemaining minute(s)."
                 ]);
                 
-                $stmt = $pdo->prepare("INSERT INTO login_attempts (email, success) VALUES (?, FALSE)");
-                $stmt->execute([$email]);
+                $db->execute("INSERT INTO login_attempts (email, success) VALUES (?, FALSE)", [$email]);
                 exit();
             }
 
-            // Get the user from the database
-            $stmt = $pdo->prepare("SELECT id, email, password_hash, name, role, is_active FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch();
+            // Fetch user
+            $user = $db->queryOne(
+                "SELECT id, email, password_hash, name, job_title, role, is_active FROM users WHERE email = ?",
+                [$email]
+            );
 
             if(!$user || !password_verify($password, $user['password_hash'])){
-                $stmt = $pdo->prepare("INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, FALSE)");
-                $stmt->execute([$user['id'] ?? null, $email]);
+                $db->execute(
+                    "INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, FALSE)",
+                    [$user['id'] ?? null, $email]
+                );
                 
                 http_response_code(401);
                 echo json_encode(['error' => 'Unauthorised: Invalid email or password']);
@@ -88,18 +89,14 @@ class AuthController {
             $token = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-            $stmt = $pdo->prepare("INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
-            $stmt->execute([
-                $user['id'],
-                $token,
-                $expiresAt
-            ]);
+            $db->execute(
+                "INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+                [$user['id'], $token, $expiresAt]
+            );
 
-            $stmt = $pdo->prepare("INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, TRUE)");
-            $stmt->execute([$user['id'], $email]);
+            $db->execute("INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, TRUE)", [$user['id'], $email]);
 
-            $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
-            $stmt->execute([$user['id']]);
+            $db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
 
             setcookie('authToken', $token, [
                 'expires' => strtotime('+1 hour'),
@@ -116,6 +113,7 @@ class AuthController {
                     'id' => $user['id'],
                     'email' => $user['email'],
                     'name' => $user['name'],
+                    'job_title' => $user['job_title'],
                     'role' => $user['role']
                 ]
             ]);
@@ -143,24 +141,49 @@ class AuthController {
         $email = trim($input['email']);
         $password = $input['password'];
 
+        // Validate name
+        if (empty($name)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Name cannot be empty']);
+            exit();
+        }
+
+        // Validate email format
+        if (empty($email)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Email cannot be empty']);
+            exit();
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid email format']);
+            exit();
+        }
+
+        // Validate password length
+        if (strlen($password) < 6) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must be at least 6 characters']);
+            exit();
+        }
+
         try{
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
+            $existingUser = $db->queryOne("SELECT id FROM users WHERE email = ?", [$email]);
 
-            if($stmt->rowCount() > 0){
+            if($existingUser){
                 http_response_code(409);
                 echo json_encode(['error' => 'Email already registered']);
                 exit();
             }
 
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $pdo->prepare("
-                INSERT INTO users (name, email, password_hash, role, is_active) 
-                VALUES (?, ?, ?, 'user', 1)
-            ");
-            $stmt->execute([$name, $email, $passwordHash]);
+            $db->execute("
+                INSERT INTO users (name, email, job_title, password_hash, role, is_active) 
+                VALUES (?, ?, ?, ?, 'user', 1)
+            ", [$name, $email, 'User', $passwordHash]);
             http_response_code(201);
             echo json_encode([
                 'success' => true,
@@ -188,10 +211,9 @@ class AuthController {
         }
 
         try{
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            $stmt = $pdo->prepare("DELETE FROM auth_tokens WHERE token = ?");
-            $stmt->execute([$token]);
+            $db->execute("DELETE FROM auth_tokens WHERE token = ?", [$token]);
 
             setcookie('authToken', '', [
                 'expires' => time() - 3600,
@@ -227,16 +249,14 @@ class AuthController {
         }
 
         try{
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            $stmt = $pdo->prepare("
-                SELECT u.id, u.email, u.name, u.role 
+            $user = $db->queryOne("
+                SELECT u.id, u.email, u.name, u.job_title, u.role 
                 FROM auth_tokens at
                 JOIN users u ON at.user_id = u.id
                 WHERE at.token = ? AND at.expires_at > NOW() AND u.is_active = 1
-            ");
-            $stmt->execute([$token]);
-            $user = $stmt->fetch();
+            ", [$token]);
 
             if(!$user){
                 http_response_code(401);
@@ -250,6 +270,7 @@ class AuthController {
                     'id' => $user['id'],
                     'email' => $user['email'],
                     'name' => $user['name'],
+                    'job_title' => $user['job_title'],
                     'role' => $user['role']
                 ]
             ]);
@@ -261,9 +282,6 @@ class AuthController {
         }
     }
 
-    
-      //Forgot Password - Send Reset Link
-     
     public static function forgotPassword() {
         require_once __DIR__ . '/../config/mail.php';
         
@@ -281,12 +299,23 @@ class AuthController {
 
         $email = trim($input['email']);
 
+        // Validate email format
+        if (empty($email)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Email cannot be empty']);
+            exit();
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid email format']);
+            exit();
+        }
+
         try {
-            $pdo = getDBConnection();
+            $db = self::getDB();
             
-            $stmt = $pdo->prepare("SELECT id, name FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = $db->queryOne("SELECT id, name FROM users WHERE email = ?", [$email]);
             
             if(!$user){
                 http_response_code(200);
@@ -297,11 +326,10 @@ class AuthController {
             $token = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-            $stmt = $pdo->prepare("
+            $db->execute("
                 INSERT INTO password_reset_tokens (user_id, token, expires_at) 
                 VALUES (?, ?, ?)
-            ");
-            $stmt->execute([$user['id'], $token, $expiresAt]);
+            ", [$user['id'], $token, $expiresAt]);
             
             $emailSent = sendPasswordResetEmail($email, $user['name'], $token);
             
@@ -319,9 +347,6 @@ class AuthController {
         }
     }
 
-    
-     // Reset Password
-     
     public static function resetPassword() {
         setCorsHeaders(['POST']);
         
@@ -338,15 +363,20 @@ class AuthController {
         $token = $input['token'];
         $password = $input['password'];
 
-        try{
-            $pdo = getDBConnection();
+        // Validate password length
+        if (strlen($password) < 6) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must be at least 6 characters']);
+            exit();
+        }
 
-            $stmt = $pdo->prepare("
+        try{
+            $db = self::getDB();
+
+            $resetToken = $db->queryOne("
                 SELECT user_id FROM password_reset_tokens
                 WHERE token = ? AND expires_at > NOW() AND used = 0
-            ");
-            $stmt->execute([$token]);
-            $resetToken = $stmt->fetch();
+            ", [$token]);
 
             if(!$resetToken){
                 http_response_code(400);
@@ -356,11 +386,9 @@ class AuthController {
 
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-            $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-            $stmt->execute([$passwordHash, $resetToken['user_id']]);
+            $db->execute("UPDATE users SET password_hash = ? WHERE id = ?", [$passwordHash, $resetToken['user_id']]);
 
-            $stmt = $pdo->prepare("UPDATE password_reset_tokens SET used = 1 WHERE token = ?");
-            $stmt->execute([$token]);
+            $db->execute("UPDATE password_reset_tokens SET used = 1 WHERE token = ?", [$token]);
             
             http_response_code(200);
             echo json_encode(['success' => true, 'message' => 'Password reset successfully']);
@@ -372,7 +400,6 @@ class AuthController {
         }
     }
 
-    // Google Login
     public static function googleLogin() {
         setCorsHeaders(['POST']);
         
@@ -413,31 +440,35 @@ class AuthController {
                 exit();
             }
 
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            $stmt = $pdo->prepare("SELECT id, email, name, role, is_active FROM users WHERE email = ?");
-            $stmt->execute([$googleUser['email']]);
-            $user = $stmt->fetch();
+            $user = $db->queryOne(
+                "SELECT id, email, name, job_title, role, is_active FROM users WHERE email = ?",
+                [$googleUser['email']]
+            );
 
             if (!$user) {
-                $stmt = $pdo->prepare("INSERT INTO users (email, name, password_hash, role, is_active, created_at, last_login) 
-                                     VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-                $stmt->execute([
-                    $googleUser['email'],
-                    $googleUser['name'] ?? $googleUser['email'],
-                    password_hash(uniqid(), PASSWORD_BCRYPT),
-                    'user',
-                    1
-                ]);
+                $db->execute(
+                    "INSERT INTO users (email, name, job_title, password_hash, role, is_active, created_at, last_login) 
+                    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                    [
+                        $googleUser['email'],
+                        $googleUser['name'] ?? $googleUser['email'],
+                        'User',
+                        password_hash(uniqid(), PASSWORD_BCRYPT),
+                        'user',
+                        1
+                    ]
+                );
 
-                $userId = $pdo->lastInsertId();
+                $userId = $db->lastInsertId();
 
-                $stmt = $pdo->prepare("SELECT id, email, name, role, is_active FROM users WHERE id = ?");
-                $stmt->execute([$userId]);
-                $user = $stmt->fetch();
+                $user = $db->queryOne(
+                    "SELECT id, email, name, job_title, role, is_active FROM users WHERE id = ?",
+                    [$userId]
+                );
             } else {
-                $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
-                $stmt->execute([$user['id']]);
+                $db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
             }
 
             if (!$user['is_active']) {
@@ -449,12 +480,10 @@ class AuthController {
             $authToken = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-            $stmt = $pdo->prepare("INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
-            $stmt->execute([
-                $user['id'],
-                $authToken,
-                $expiresAt
-            ]);
+            $db->execute(
+                "INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+                [$user['id'], $authToken, $expiresAt]
+            );
 
             setcookie('authToken', $authToken, [
                 'expires' => strtotime('+1 hour'),
@@ -471,6 +500,7 @@ class AuthController {
                     'id' => $user['id'],
                     'email' => $user['email'],
                     'name' => $user['name'],
+                    'job_title' => $user['job_title'],
                     'role' => $user['role']
                 ]
             ]);

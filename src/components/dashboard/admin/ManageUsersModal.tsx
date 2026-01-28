@@ -1,0 +1,327 @@
+import { useState, useEffect } from "react";
+import {
+  adminService,
+  type UpdateUserData,
+} from "../../../services/adminService";
+import type { User } from "../../../types";
+import { AddUserModal } from "./AddUserModal";
+
+interface ManageUsersModalProps {
+  show: boolean;
+  onClose: () => void;
+  onRefresh?: () => void;
+}
+
+export function ManageUsersModal({
+  show,
+  onClose,
+  onRefresh,
+}: ManageUsersModalProps) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editFormData, setEditFormData] = useState<UpdateUserData>({
+    id: 0,
+    name: "",
+    email: "",
+    job_title: "",
+    role: "user",
+    is_active: true,
+  });
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      loadUsers();
+    }
+  }, [show]);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await adminService.getAllUsers();
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditClick = (user: User) => {
+    setEditingUser(user);
+    setEditFormData({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      job_title: user.job_title || "",
+      role: user.role as "user" | "admin",
+      is_active: user.is_active,
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await adminService.updateUser(editFormData);
+      setEditingUser(null);
+      loadUsers();
+      onRefresh?.();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to update user");
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm("Are you sure you want to delete this user?")) {
+      return;
+    }
+
+    setError("");
+    try {
+      await adminService.deleteUser(userId);
+      loadUsers();
+      onRefresh?.();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to delete user");
+    }
+  };
+
+  const handleUserAdded = () => {
+    setShowAddUserModal(false);
+    loadUsers();
+    onRefresh?.();
+  };
+
+  if (!show) return null;
+
+  return (
+    <>
+      <div
+        className="modal fade show d-block"
+        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        tabIndex={-1}
+      >
+        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+          <div className="modal-content">
+            <div
+              className="modal-header"
+              style={{
+                background: "linear-gradient(135deg, #2d5a8c 0%, #1e3a5f 100%)",
+              }}
+            >
+              <h5 className="modal-title text-white">
+                <i className="bi bi-people-fill me-2"></i>
+                Manage Users
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={onClose}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
+
+              {loading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Job Title</th>
+                          <th>Role</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((user) => (
+                          <tr key={user.id}>
+                            {editingUser?.id === user.id ? (
+                              <>
+                                <td>
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    value={editFormData.name}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        name: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="email"
+                                    className="form-control form-control-sm"
+                                    value={editFormData.email}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        email: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    value={editFormData.job_title}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        job_title: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <select
+                                    className="form-select form-select-sm"
+                                    value={editFormData.role}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        role: e.target.value as
+                                          | "user"
+                                          | "admin",
+                                      })
+                                    }
+                                  >
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                  </select>
+                                </td>
+                                <td>
+                                  <div className="form-check">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      checked={editFormData.is_active}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          is_active: e.target.checked,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-success me-1"
+                                    onClick={handleEditSubmit}
+                                  >
+                                    <i className="bi bi-check-lg me-1"></i>
+                                    Save
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={() => setEditingUser(null)}
+                                  >
+                                    <i className="bi bi-x-lg me-1"></i>
+                                    Cancel
+                                  </button>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td>{user.name}</td>
+                                <td>{user.email}</td>
+                                <td>{user.job_title || "-"}</td>
+                                <td>
+                                  <span
+                                    className={`badge bg-${
+                                      user.role === "admin"
+                                        ? "primary"
+                                        : "secondary"
+                                    }`}
+                                  >
+                                    {user.role}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span
+                                    className={`badge bg-${
+                                      user.is_active ? "success" : "danger"
+                                    }`}
+                                  >
+                                    {user.is_active ? "Active" : "Inactive"}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-outline-primary me-1"
+                                    onClick={() => handleEditClick(user)}
+                                  >
+                                    <i className="bi bi-pencil-fill me-1"></i>
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => handleDeleteUser(user.id)}
+                                  >
+                                    <i className="bi bi-trash-fill me-1"></i>
+                                    Delete
+                                  </button>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-4 border-top pt-3">
+                    <button
+                      className="btn btn-primary w-100"
+                      onClick={() => setShowAddUserModal(true)}
+                    >
+                      <i className="bi bi-person-plus-fill me-2"></i>
+                      Add New User
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onClose}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <AddUserModal
+        show={showAddUserModal}
+        onClose={() => setShowAddUserModal(false)}
+        onUserAdded={handleUserAdded}
+      />
+    </>
+  );
+}

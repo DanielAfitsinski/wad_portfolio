@@ -1,9 +1,9 @@
 import type { RouteObject } from "react-router-dom";
-import { Login } from "../components/Login";
-import { Dashboard } from "../components/Dashboard";
-import { Register } from "../components/Register";
-import { ResetPassword } from "../components/ResetPassword";
-import { ForgotPassword } from "../components/ForgotPassword";
+import { Login } from "../components/login/Login";
+import { Dashboard } from "../components/dashboard/Dashboard";
+import { Register } from "../components/login/Register";
+import { ResetPassword } from "../components/login/ResetPassword";
+import { ForgotPassword } from "../components/login/ForgotPassword";
 
 export const routes: RouteObject[] = [
   {

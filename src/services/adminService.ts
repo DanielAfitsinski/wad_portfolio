@@ -5,6 +5,7 @@ export interface CreateUserData {
   name: string;
   email: string;
   password: string;
+  job_title: string;
   role?: "user" | "admin";
   is_active?: boolean;
 }
@@ -13,6 +14,7 @@ export interface UpdateUserData {
   id: number;
   name?: string;
   email?: string;
+  job_title?: string;
   role?: "user" | "admin";
   is_active?: boolean;
 }
@@ -28,30 +30,31 @@ export interface UserCourseAssignment {
 }
 
 export const adminService = {
-  // User management
+  // Users
   async getAllUsers(): Promise<User[]> {
-    const response = await axiosInstance.get<ApiResponse<User[]>>("/users.php");
+    const response =
+      await axiosInstance.get<ApiResponse<User[]>>("/users/users.php");
     return response.data.data || [];
   },
 
   async createUser(userData: CreateUserData) {
-    const response = await axiosInstance.post("/users.php", userData);
+    const response = await axiosInstance.post("/users/users.php", userData);
     return response.data;
   },
 
   async updateUser(userData: UpdateUserData) {
-    const response = await axiosInstance.put("/users.php", userData);
+    const response = await axiosInstance.put("/users/users.php", userData);
     return response.data;
   },
 
   async deleteUser(userId: number) {
-    const response = await axiosInstance.delete("/users.php", {
+    const response = await axiosInstance.delete("/users/users.php", {
       data: { id: userId },
     });
     return response.data;
   },
 
-  // User-Course assignments
+  // User courses
   async getAllUserCourses(): Promise<UserCourseAssignment[]> {
     const response =
       await axiosInstance.get<ApiResponse<UserCourseAssignment[]>>(

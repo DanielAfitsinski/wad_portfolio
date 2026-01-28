@@ -31,7 +31,7 @@ export function Register() {
           error = "Email is required";
         } else {
           const emailInput = document.querySelector(
-            'input[name="email"]'
+            'input[name="email"]',
           ) as HTMLInputElement;
           if (!emailInput?.validity.valid) {
             error = "Invalid email format";
@@ -64,7 +64,7 @@ export function Register() {
       [name]: value,
     }));
 
-    // Validate field in real-time
+    // Validate field
     const error = validateField(name, value);
     setErrors((prev) => ({
       ...prev,
@@ -93,7 +93,7 @@ export function Register() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/register.php", {
+      const response = await fetch("/api/login/register.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

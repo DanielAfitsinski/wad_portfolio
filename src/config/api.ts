@@ -3,30 +3,30 @@ const API_BASE_URL = "http://localhost:8000/backend/api";
 export const API_ENDPOINTS = {
   // Authentication
   auth: {
-    login: `${API_BASE_URL}/login.php`,
-    register: `${API_BASE_URL}/register.php`,
-    logout: `${API_BASE_URL}/logout.php`,
-    verifyAuth: `${API_BASE_URL}/verify-auth.php`,
-    forgotPassword: `${API_BASE_URL}/forgot-password.php`,
-    resetPassword: `${API_BASE_URL}/reset-password.php`,
-    googleLogin: `${API_BASE_URL}/google-login.php`,
+    login: `${API_BASE_URL}/login/login.php`,
+    register: `${API_BASE_URL}/login/register.php`,
+    logout: `${API_BASE_URL}/login/logout.php`,
+    verifyAuth: `${API_BASE_URL}/login/verify-auth.php`,
+    forgotPassword: `${API_BASE_URL}/login/forgot-password.php`,
+    resetPassword: `${API_BASE_URL}/login/reset-password.php`,
+    googleLogin: `${API_BASE_URL}/login/google-login.php`,
   },
 
   // Courses
   courses: {
-    list: `${API_BASE_URL}/courses.php`,
+    list: `${API_BASE_URL}/courses/courses.php`,
   },
 
   // Enrollments
   enrollments: {
-    enroll: `${API_BASE_URL}/enroll.php`,
-    list: `${API_BASE_URL}/enrollments.php`,
-    unenroll: `${API_BASE_URL}/unenroll.php`,
+    enroll: `${API_BASE_URL}/courses/enroll.php`,
+    list: `${API_BASE_URL}/courses/enrollments.php`,
+    unenroll: `${API_BASE_URL}/courses/unenroll.php`,
   },
 
   // Admin
   admin: {
-    users: `${API_BASE_URL}/users.php`,
+    users: `${API_BASE_URL}/users/users.php`,
     userCourses: `${API_BASE_URL}/user-courses.php`,
   },
 } as const;

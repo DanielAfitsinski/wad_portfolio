@@ -64,7 +64,7 @@ export function ResetPassword() {
     setUiState((prev) => ({ ...prev, loading: true }));
 
     try {
-      const response = await fetch("/api/reset-password.php", {
+      const response = await fetch("/api/login/reset-password.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

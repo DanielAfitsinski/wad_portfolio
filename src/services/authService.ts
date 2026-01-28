@@ -2,15 +2,16 @@ import axiosInstance from "./axiosInstance";
 import type { User, ApiResponse } from "../types";
 
 export const authService = {
-  // Get the current logged-in user
+  // Verify auth
   async verifyAuth(): Promise<User> {
-    const response =
-      await axiosInstance.get<ApiResponse<User>>("/verify-auth.php");
+    const response = await axiosInstance.get<ApiResponse<User>>(
+      "/login/verify-auth.php",
+    );
     return response.data.user!;
   },
-  // login with email and password
+  // Login
   async login(email: string, password: string) {
-    const response = await axiosInstance.post("/login.php", {
+    const response = await axiosInstance.post("/login/login.php", {
       email,
       password,
     });
@@ -18,24 +19,24 @@ export const authService = {
   },
 
   async googleLogin(accessToken: string) {
-    const response = await axiosInstance.post("/google-login.php", {
+    const response = await axiosInstance.post("/login/google-login.php", {
       token: accessToken,
     });
     return response.data;
   },
 
-  // Create a new account
+  // Register
   async register(name: string, email: string, password: string) {
-    const response = await axiosInstance.post("/register.php", {
+    const response = await axiosInstance.post("/login/register.php", {
       name,
       email,
       password,
     });
     return response.data;
   },
-  // Logout the user
+  // Logout
   async logout() {
-    const response = await axiosInstance.post("/logout.php", {});
+    const response = await axiosInstance.post("/login/logout.php", {});
     return response.data;
   },
 };

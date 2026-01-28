@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import type { User, Course, EnrolledCourse } from "../types";
-import { authService } from "../services/authService";
-import { courseService } from "../services/courseService";
-import { EnrolledCoursesSection } from "./EnrolledCoursesSection";
-import { AvailableCoursesSection } from "./AvailableCoursesSection";
+import type { User, Course, EnrolledCourse } from "../../types";
+import { authService } from "../../services/authService";
+import { courseService } from "../../services/courseService";
+import { EnrolledCoursesSection } from "./courses/EnrolledCoursesSection";
+import { AvailableCoursesSection } from "./courses/AvailableCoursesSection";
+import { EditCourseModal } from "./admin/EditCourseModal";
 import { Navbar } from "./Navbar";
 
 export function Dashboard() {
@@ -11,6 +12,7 @@ export function Dashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -84,6 +86,19 @@ export function Dashboard() {
     }
   };
 
+  const handleEditCourse = (course: Course) => {
+    setEditingCourse(course);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingCourse(null);
+  };
+
+  const handleCourseUpdated = async () => {
+    await refreshData();
+    setEditingCourse(null);
+  };
+
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -117,7 +132,16 @@ export function Dashboard() {
       <AvailableCoursesSection
         courses={courses}
         enrolledCourseIds={enrolledCourseIds}
+        isAdmin={user.role === "admin"}
         onEnroll={handleEnroll}
+        onEdit={handleEditCourse}
+      />
+
+      <EditCourseModal
+        show={!!editingCourse}
+        course={editingCourse}
+        onClose={handleCloseEditModal}
+        onUpdate={handleCourseUpdated}
       />
     </div>
   );

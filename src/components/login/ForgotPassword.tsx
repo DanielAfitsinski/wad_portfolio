@@ -3,24 +3,47 @@ import { useNavigate } from "react-router-dom";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const validateEmail = (value: string): string => {
+    if (!value.trim()) {
+      return "Email is required";
+    }
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      return "Invalid email format";
+    }
+    return "";
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    // Validate field
+    setEmailError(validateEmail(value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (!email.trim()) {
-      setError("Email is required");
+    // Validate email
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
       return;
     }
+
     setLoading(true);
 
     try {
-      const response = await fetch("/api/forgot-password.php", {
+      const response = await fetch("/api/login/forgot-password.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,15 +103,19 @@ export function ForgotPassword() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="form-control"
+                  onChange={handleEmailChange}
+                  className={`form-control ${emailError ? "is-invalid" : email ? "is-valid" : ""}`}
                   placeholder="Enter your email"
+                  disabled={loading}
                 />
+                {emailError && (
+                  <div className="invalid-feedback d-block">{emailError}</div>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !!emailError || !email}
                 className="btn btn-primary w-100 fw-semibold"
               >
                 {loading ? "Sending..." : "Send Reset Link"}

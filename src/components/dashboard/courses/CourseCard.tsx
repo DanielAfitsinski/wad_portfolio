@@ -1,13 +1,21 @@
 import { useState } from "react";
-import type { Course } from "../types";
+import type { Course } from "../../../types";
 
 interface CourseCardProps {
   course: Course;
   isEnrolled: boolean;
+  isAdmin?: boolean;
   onEnroll: (courseId: number) => void;
+  onEdit?: (course: Course) => void;
 }
 
-export function CourseCard({ course, isEnrolled, onEnroll }: CourseCardProps) {
+export function CourseCard({
+  course,
+  isEnrolled,
+  isAdmin = false,
+  onEnroll,
+  onEdit,
+}: CourseCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isFull = course.enrolled >= course.capacity;
   const percent = Math.round((course.enrolled / course.capacity) * 100);
@@ -69,15 +77,27 @@ export function CourseCard({ course, isEnrolled, onEnroll }: CourseCardProps) {
             </p>
           </div>
 
-          <button
-            className={`btn w-100 ${
-              isFull || isEnrolled ? "btn-secondary" : "btn-primary"
-            }`}
-            disabled={isFull || isEnrolled}
-            onClick={() => onEnroll(course.id)}
-          >
-            {isEnrolled ? "Enrolled" : isFull ? "Course Full" : "Enroll"}
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className={`btn flex-grow-1 ${
+                isFull || isEnrolled ? "btn-secondary" : "btn-primary"
+              }`}
+              disabled={isFull || isEnrolled}
+              onClick={() => onEnroll(course.id)}
+            >
+              {isEnrolled ? "Enrolled" : isFull ? "Course Full" : "Enroll"}
+            </button>
+
+            {isAdmin && onEdit && (
+              <button
+                className="btn btn-outline-primary"
+                onClick={() => onEdit(course)}
+                title="Edit course"
+              >
+                <i className="bi bi-pencil-square">Edit</i>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

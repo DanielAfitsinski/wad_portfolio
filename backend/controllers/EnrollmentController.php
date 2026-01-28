@@ -4,6 +4,11 @@ require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/../common/cors.php';
 
 class EnrollmentController {
+    
+    private static function getDB() {
+        return Database::getInstance();
+    }
+    
     public static function enroll() {
         setCorsHeaders(['POST']);
         
@@ -21,28 +26,28 @@ class EnrollmentController {
         $courseId = (int)$input['course_id'];
 
         try {
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            // Check if the user is already enrolled
-            $stmt = $pdo->prepare("SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?");
-            $stmt->execute([$userId, $courseId]);
+            // Check existing enrollment
+            $existingEnrollment = $db->queryOne(
+                "SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?",
+                [$userId, $courseId]
+            );
             
-            if($stmt->rowCount() > 0){
+            if($existingEnrollment){
                 http_response_code(409);
                 echo json_encode(['error' => 'User already enrolled in this course']);
                 exit();
             }
 
-            // Get the course details 
-            $stmt = $pdo->prepare("
+            // Fetch course details
+            $courseData = $db->queryOne("
                 SELECT c.id, c.title, c.instructor, c.duration, c.capacity, COUNT(ce.id) AS enrolled
                 FROM courses c
                 LEFT JOIN course_enrollments ce ON c.id = ce.course_id
                 WHERE c.id = ?
                 GROUP BY c.id, c.title, c.instructor, c.duration, c.capacity
-            ");
-            $stmt->execute([$courseId]);
-            $courseData = $stmt->fetch();
+            ", [$courseId]);
 
             if(!$courseData){
                 http_response_code(404);
@@ -56,29 +61,25 @@ class EnrollmentController {
                 exit();
             }
 
-            // Check if the user exists
-            $stmt = $pdo->prepare("SELECT id, email, name FROM users WHERE id = ?");
-            $stmt->execute([$userId]);
+            // Verify user exists
+            $userData = $db->queryOne("SELECT id, email, name FROM users WHERE id = ?", [$userId]);
             
-            if($stmt->rowCount() === 0){
+            if(!$userData){
                 http_response_code(404);
                 echo json_encode(['error' => 'User not found']);
                 exit();
             }
 
-            $userData = $stmt->fetch();
-
-            // Enroll the user in the course
-            $stmt = $pdo->prepare("
+            // Create enrollment
+            $db->execute("
                 INSERT INTO course_enrollments (user_id, course_id, enrolled_at)
                 VALUES (?, ?, NOW())
-            ");
-            $stmt->execute([$userId, $courseId]);
+            ", [$userId, $courseId]);
 
-            $enrollmentId = $pdo->lastInsertId();
+            $enrollmentId = $db->lastInsertId();
             $enrollmentDate = date('Y-m-d H:i:s');
 
-            // Send the confirmation email
+            // Send confirmation email
             try {
                 sendCourseEnrollmentConfirmationEmail(
                     $userData['email'],
@@ -120,9 +121,9 @@ class EnrollmentController {
         $userId = (int) $_GET['user_id'];
 
         try {
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
-            $stmt = $pdo->prepare("
+            $rows = $db->query("
                 SELECT 
                     c.id,
                     c.title,
@@ -137,9 +138,7 @@ class EnrollmentController {
                 JOIN courses c ON c.id = ce.course_id
                 WHERE ce.user_id = ?
                 ORDER BY ce.enrolled_at DESC
-            ");
-            $stmt->execute([$userId]);
-            $rows = $stmt->fetchAll();
+            ", [$userId]);
 
             http_response_code(200);
             echo json_encode([
@@ -167,22 +166,23 @@ class EnrollmentController {
         }
 
         try {
-            $pdo = getDBConnection();
+            $db = self::getDB();
 
             $enrollmentId = null;
 
-            // use enrollment_id if provided
+            // Get enrollment ID
             if(isset($input['enrollment_id'])){
                 $enrollmentId = (int)$input['enrollment_id'];
             }
-            // Otherwise find the enrollment by user_id and course_id
+            // Find enrollment by user and course
             elseif(isset($input['user_id']) && isset($input['course_id'])){
                 $userId = (int)$input['user_id'];
                 $courseId = (int)$input['course_id'];
                 
-                $stmt = $pdo->prepare("SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?");
-                $stmt->execute([$userId, $courseId]);
-                $enrollment = $stmt->fetch();
+                $enrollment = $db->queryOne(
+                    "SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?",
+                    [$userId, $courseId]
+                );
                 
                 if(!$enrollment){
                     http_response_code(404);
@@ -193,7 +193,7 @@ class EnrollmentController {
                 $enrollmentId = $enrollment['id'];
             }
 
-            $stmt = $pdo->prepare("DELETE FROM course_enrollments WHERE id = ?");
+            $stmt = $db->prepare("DELETE FROM course_enrollments WHERE id = ?");
             $stmt->execute([$enrollmentId]);
 
             if($stmt->rowCount() > 0){

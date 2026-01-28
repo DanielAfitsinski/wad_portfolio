@@ -2,17 +2,19 @@
 require_once __DIR__ . '/../config/database.php';
 
 class UserController {
+    private $db;
     
+    public function __construct() {
+        $this->db = Database::getInstance();
+    }
     
     public function getAllUsers() {
         try {
-            $pdo = getDBConnection();
-            $stmt = $pdo->query("
-                SELECT id, name, email, role, is_active, created_at, last_login 
+            $users = $this->db->query("
+                SELECT id, name, email, job_title, role, is_active, created_at, last_login 
                 FROM users 
                 ORDER BY created_at DESC
             ");
-            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             return json_encode([
                 'success' => true,
@@ -32,10 +34,10 @@ class UserController {
             $name = trim($data['name'] ?? '');
             $email = trim($data['email'] ?? '');
             $password = $data['password'] ?? '';
+            $job_title = trim($data['job_title'] ?? '');
             $role = $data['role'] ?? 'user';
             $is_active = $data['is_active'] ?? true;
             
-            // Validation
             if (empty($name) || empty($email) || empty($password)) {
                 http_response_code(400);
                 return json_encode([
@@ -60,12 +62,9 @@ class UserController {
                 ]);
             }
             
-            $pdo = getDBConnection();
-            
-            // Check if email already exists
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
+            // Verify email uniqueness
+            $existingUser = $this->db->queryOne("SELECT id FROM users WHERE email = ?", [$email]);
+            if ($existingUser) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
@@ -76,22 +75,19 @@ class UserController {
             // Hash password
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
             
-            // Insert user
-            $stmt = $pdo->prepare("
-                INSERT INTO users (name, email, password_hash, role, is_active, created_at) 
-                VALUES (?, ?, ?, ?, ?, NOW())
-            ");
-            $stmt->execute([$name, $email, $password_hash, $role, $is_active ? 1 : 0]);
+            // Create user
+            $this->db->execute("
+                INSERT INTO users (name, email, job_title, password_hash, role, is_active, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ", [$name, $email, $job_title ?: 'User', $password_hash, $role, $is_active ? 1 : 0]);
             
-            $userId = $pdo->lastInsertId();
+            $userId = $this->db->lastInsertId();
             
-            // Fetch the created user
-            $stmt = $pdo->prepare("
-                SELECT id, name, email, role, is_active, created_at 
+            // Fetch created user
+            $user = $this->db->queryOne("
+                SELECT id, name, email, job_title, role, is_active, created_at 
                 FROM users WHERE id = ?
-            ");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            ", [$userId]);
             
             return json_encode([
                 'success' => true,
@@ -114,6 +110,7 @@ class UserController {
             $userId = $data['id'] ?? null;
             $name = trim($data['name'] ?? '');
             $email = trim($data['email'] ?? '');
+            $job_title = isset($data['job_title']) ? trim($data['job_title']) : null;
             $role = $data['role'] ?? 'user';
             $is_active = $data['is_active'] ?? true;
             
@@ -124,8 +121,6 @@ class UserController {
                     'error' => 'User ID is required'
                 ]);
             }
-            
-            $pdo = getDBConnection();
             
             // Build update query
             $updates = [];
@@ -148,6 +143,11 @@ class UserController {
                 $params[] = $email;
             }
             
+            if (isset($data['job_title'])) {
+                $updates[] = "job_title = ?";
+                $params[] = $job_title;
+            }
+            
             if (isset($data['role'])) {
                 $updates[] = "role = ?";
                 $params[] = $role;
@@ -168,16 +168,13 @@ class UserController {
             
             $params[] = $userId;
             $sql = "UPDATE users SET " . implode(', ', $updates) . " WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            $this->db->execute($sql, $params);
             
             // Fetch updated user
-            $stmt = $pdo->prepare("
-                SELECT id, name, email, role, is_active, created_at, last_login 
+            $user = $this->db->queryOne("
+                SELECT id, name, email, job_title, role, is_active, created_at, last_login 
                 FROM users WHERE id = ?
-            ");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            ", [$userId]);
             
             return json_encode([
                 'success' => true,
@@ -207,14 +204,11 @@ class UserController {
                 ]);
             }
             
-            $pdo = getDBConnection();
-            
-            // Delete user's enrollments first
-            $stmt = $pdo->prepare("DELETE FROM course_enrollments WHERE user_id = ?");
-            $stmt->execute([$userId]);
+            // Remove enrollments
+            $this->db->execute("DELETE FROM course_enrollments WHERE user_id = ?", [$userId]);
             
             // Delete user
-            $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+            $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
             $stmt->execute([$userId]);
             
             if ($stmt->rowCount() === 0) {
@@ -242,8 +236,7 @@ class UserController {
    
     public function getAllUserCourses() {
         try {
-            $pdo = getDBConnection();
-            $stmt = $pdo->query("
+            $assignments = $this->db->query("
                 SELECT 
                     e.id,
                     e.user_id,
@@ -257,7 +250,6 @@ class UserController {
                 JOIN courses c ON e.course_id = c.id
                 ORDER BY e.enrolled_at DESC
             ");
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             return json_encode([
                 'success' => true,
@@ -275,8 +267,7 @@ class UserController {
     
     public function getUserCourses($userId) {
         try {
-            $pdo = getDBConnection();
-            $stmt = $pdo->prepare("
+            $courses = $this->db->query("
                 SELECT 
                     e.id,
                     e.course_id,
@@ -289,9 +280,7 @@ class UserController {
                 JOIN courses c ON e.course_id = c.id
                 WHERE e.user_id = ?
                 ORDER BY e.enrolled_at DESC
-            ");
-            $stmt->execute([$userId]);
-            $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            ", [$userId]);
             
             return json_encode([
                 'success' => true,
@@ -320,12 +309,9 @@ class UserController {
                 ]);
             }
             
-            $pdo = getDBConnection();
-            
-            // Check if user exists
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ?");
-            $stmt->execute([$userId]);
-            if (!$stmt->fetch()) {
+            // Verify user exists
+            $user = $this->db->queryOne("SELECT id FROM users WHERE id = ?", [$userId]);
+            if (!$user) {
                 http_response_code(404);
                 return json_encode([
                     'success' => false,
@@ -333,10 +319,8 @@ class UserController {
                 ]);
             }
             
-            // Check if course exists
-            $stmt = $pdo->prepare("SELECT id, capacity FROM courses WHERE id = ?");
-            $stmt->execute([$courseId]);
-            $course = $stmt->fetch();
+            // Verify course exists
+            $course = $this->db->queryOne("SELECT id, capacity FROM courses WHERE id = ?", [$courseId]);
             if (!$course) {
                 http_response_code(404);
                 return json_encode([
@@ -345,10 +329,12 @@ class UserController {
                 ]);
             }
             
-            // Check if already enrolled
-            $stmt = $pdo->prepare("SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?");
-            $stmt->execute([$userId, $courseId]);
-            if ($stmt->fetch()) {
+            // Check existing enrollment
+            $existingEnrollment = $this->db->queryOne(
+                "SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?",
+                [$userId, $courseId]
+            );
+            if ($existingEnrollment) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
@@ -356,10 +342,11 @@ class UserController {
                 ]);
             }
             
-            // Check course capacity
-            $stmt = $pdo->prepare("SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = ?");
-            $stmt->execute([$courseId]);
-            $result = $stmt->fetch();
+            // Validate capacity
+            $result = $this->db->queryOne(
+                "SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = ?",
+                [$courseId]
+            );
             if ($result['enrolled'] >= $course['capacity']) {
                 http_response_code(400);
                 return json_encode([
@@ -368,9 +355,11 @@ class UserController {
                 ]);
             }
             
-            // Enroll user
-            $stmt = $pdo->prepare("INSERT INTO course_enrollments (user_id, course_id, enrolled_at) VALUES (?, ?, NOW())");
-            $stmt->execute([$userId, $courseId]);
+            // Create enrollment
+            $this->db->execute(
+                "INSERT INTO course_enrollments (user_id, course_id, enrolled_at) VALUES (?, ?, NOW())",
+                [$userId, $courseId]
+            );
             
             return json_encode([
                 'success' => true,
@@ -400,10 +389,8 @@ class UserController {
                 ]);
             }
             
-            $pdo = getDBConnection();
-            
-            // Remove enrollment
-            $stmt = $pdo->prepare("DELETE FROM course_enrollments WHERE user_id = ? AND course_id = ?");
+            // Delete enrollment
+            $stmt = $this->db->prepare("DELETE FROM course_enrollments WHERE user_id = ? AND course_id = ?");
             $stmt->execute([$userId, $courseId]);
             
             if ($stmt->rowCount() === 0) {

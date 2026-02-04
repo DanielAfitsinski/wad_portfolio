@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { adminService } from "../services/adminService";
-import type { UserCourseAssignment } from "../services/adminService";
+import { adminService } from "../../../services/adminService";
+import type { UserCourseAssignment, ApiError } from "../../../types";
 
 interface UnassignCourseModalProps {
   show: boolean;
@@ -21,14 +21,16 @@ export function UnassignCourseModal({
   onUnassigned,
 }: UnassignCourseModalProps) {
   const [assignments, setAssignments] = useState<UserCourseAssignment[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<number>>(
-    new Set(),
-  );
-  const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [formData, setFormData] = useState({
+    selectedUserId: "",
+    selectedCourseIds: new Set<number>(),
+  });
+  const [uiState, setUiState] = useState({
+    loading: false,
+    loadingData: false,
+    error: "",
+    success: "",
+  });
 
   useEffect(() => {
     if (show) {
@@ -37,14 +39,17 @@ export function UnassignCourseModal({
   }, [show]);
 
   const loadAssignments = async () => {
-    setLoadingData(true);
+    setUiState((prev) => ({ ...prev, loadingData: true }));
     try {
       const data = await adminService.getAllUserCourses();
       setAssignments(data);
     } catch (err) {
-      setError("Failed to load course assignments");
+      setUiState((prev) => ({
+        ...prev,
+        error: "Failed to load course assignments",
+      }));
     } finally {
-      setLoadingData(false);
+      setUiState((prev) => ({ ...prev, loadingData: false }));
     }
   };
 
@@ -67,82 +72,99 @@ export function UnassignCourseModal({
   );
 
   const selectedUser = usersWithCourses.find(
-    (u) => u.user_id.toString() === selectedUserId,
+    (u) => u.user_id.toString() === formData.selectedUserId,
   );
 
   const toggleCourse = (courseId: number) => {
-    const newSelected = new Set(selectedCourseIds);
-    if (newSelected.has(courseId)) {
-      newSelected.delete(courseId);
-    } else {
-      newSelected.add(courseId);
-    }
-    setSelectedCourseIds(newSelected);
+    setFormData((prev) => {
+      const newSelected = new Set(prev.selectedCourseIds);
+      if (newSelected.has(courseId)) {
+        newSelected.delete(courseId);
+      } else {
+        newSelected.add(courseId);
+      }
+      return { ...prev, selectedCourseIds: newSelected };
+    });
   };
 
   const toggleAll = () => {
     if (!selectedUser) return;
 
-    if (selectedCourseIds.size === selectedUser.courses.length) {
-      setSelectedCourseIds(new Set());
-    } else {
-      setSelectedCourseIds(
-        new Set(selectedUser.courses.map((c) => c.course_id)),
-      );
-    }
+    setFormData((prev) => ({
+      ...prev,
+      selectedCourseIds:
+        prev.selectedCourseIds.size === selectedUser.courses.length
+          ? new Set()
+          : new Set(selectedUser.courses.map((c) => c.course_id)),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    setUiState((prev) => ({ ...prev, error: "", success: "" }));
 
-    if (!selectedUserId) {
-      setError("Please select a user");
+    if (!formData.selectedUserId) {
+      setUiState((prev) => ({ ...prev, error: "Please select a user" }));
       return;
     }
 
-    if (selectedCourseIds.size === 0) {
-      setError("Please select at least one course to unassign");
+    if (formData.selectedCourseIds.size === 0) {
+      setUiState((prev) => ({
+        ...prev,
+        error: "Please select at least one course to unassign",
+      }));
       return;
     }
 
-    setLoading(true);
+    setUiState((prev) => ({ ...prev, loading: true }));
 
     try {
-      const userId = parseInt(selectedUserId);
-      const promises = Array.from(selectedCourseIds).map((courseId) =>
+      const userId = parseInt(formData.selectedUserId);
+      const promises = Array.from(formData.selectedCourseIds).map((courseId) =>
         adminService.removeUserFromCourse(userId, courseId),
       );
 
       await Promise.all(promises);
 
-      setSuccess(
-        `Successfully unassigned ${selectedCourseIds.size} course(s)!`,
-      );
+      setUiState((prev) => ({
+        ...prev,
+        success: `Successfully unassigned ${formData.selectedCourseIds.size} course(s)!`,
+      }));
       setTimeout(() => {
         onUnassigned();
         handleClose();
       }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to unassign courses");
+    } catch (err) {
+      const error = err as ApiError;
+      setUiState((prev) => ({
+        ...prev,
+        error: error.response?.data?.error || "Failed to unassign courses",
+      }));
     } finally {
-      setLoading(false);
+      setUiState((prev) => ({ ...prev, loading: false }));
     }
   };
 
   const handleClose = () => {
-    setSelectedUserId("");
-    setSelectedCourseIds(new Set());
-    setError("");
-    setSuccess("");
+    setFormData({
+      selectedUserId: "",
+      selectedCourseIds: new Set(),
+    });
+    setUiState({
+      loading: false,
+      loadingData: false,
+      error: "",
+      success: "",
+    });
     onClose();
   };
 
   const handleUserChange = (userId: string) => {
-    setSelectedUserId(userId);
-    setSelectedCourseIds(new Set());
-    setError("");
+    setFormData({
+      selectedUserId: userId,
+      selectedCourseIds: new Set(),
+    });
+    setUiState((prev) => ({ ...prev, error: "" }));
   };
 
   if (!show) return null;
@@ -164,7 +186,7 @@ export function UnassignCourseModal({
             ></button>
           </div>
           <div className="modal-body">
-            {loadingData ? (
+            {uiState.loadingData ? (
               <div className="text-center py-5">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
@@ -179,7 +201,7 @@ export function UnassignCourseModal({
                   <select
                     id="user"
                     className="form-select form-select-lg"
-                    value={selectedUserId}
+                    value={formData.selectedUserId}
                     onChange={(e) => handleUserChange(e.target.value)}
                     required
                   >
@@ -210,7 +232,8 @@ export function UnassignCourseModal({
                         className="btn btn-sm btn-outline-secondary"
                         onClick={toggleAll}
                       >
-                        {selectedCourseIds.size === selectedUser.courses.length
+                        {formData.selectedCourseIds.size ===
+                        selectedUser.courses.length
                           ? "Deselect All"
                           : "Select All"}
                       </button>
@@ -229,7 +252,9 @@ export function UnassignCourseModal({
                           <input
                             className="form-check-input"
                             type="checkbox"
-                            checked={selectedCourseIds.has(course.course_id)}
+                            checked={formData.selectedCourseIds.has(
+                              course.course_id,
+                            )}
                             onChange={() => toggleCourse(course.course_id)}
                             id={`course-${course.id}`}
                             style={{ cursor: "pointer" }}
@@ -255,23 +280,23 @@ export function UnassignCourseModal({
                       ))}
                     </div>
                     <div className="text-muted small mt-2">
-                      {selectedCourseIds.size} of {selectedUser.courses.length}{" "}
-                      course(s) selected
+                      {formData.selectedCourseIds.size} of{" "}
+                      {selectedUser.courses.length} course(s) selected
                     </div>
                   </div>
                 )}
 
-                {error && (
+                {uiState.error && (
                   <div className="alert alert-danger" role="alert">
                     <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {error}
+                    {uiState.error}
                   </div>
                 )}
 
-                {success && (
+                {uiState.success && (
                   <div className="alert alert-success" role="alert">
                     <i className="bi bi-check-circle-fill me-2"></i>
-                    {success}
+                    {uiState.success}
                   </div>
                 )}
 
@@ -280,10 +305,12 @@ export function UnassignCourseModal({
                     type="submit"
                     className="btn btn-danger"
                     disabled={
-                      loading || !selectedUserId || selectedCourseIds.size === 0
+                      uiState.loading ||
+                      !formData.selectedUserId ||
+                      formData.selectedCourseIds.size === 0
                     }
                   >
-                    {loading ? (
+                    {uiState.loading ? (
                       <>
                         <span
                           className="spinner-border spinner-border-sm me-2"
@@ -296,8 +323,8 @@ export function UnassignCourseModal({
                       <>
                         <i className="bi bi-x-circle me-2"></i>
                         Unassign{" "}
-                        {selectedCourseIds.size > 0
-                          ? `(${selectedCourseIds.size})`
+                        {formData.selectedCourseIds.size > 0
+                          ? `(${formData.selectedCourseIds.size})`
                           : ""}
                       </>
                     )}
@@ -306,7 +333,7 @@ export function UnassignCourseModal({
                     type="button"
                     className="btn btn-secondary"
                     onClick={handleClose}
-                    disabled={loading}
+                    disabled={uiState.loading}
                   >
                     Cancel
                   </button>

@@ -62,7 +62,7 @@ class EnrollmentController {
             }
 
             // Verify user exists
-            $userData = $db->queryOne("SELECT id, email, name FROM users WHERE id = ?", [$userId]);
+            $userData = $db->queryOne("SELECT id, email, first_name, last_name FROM users WHERE id = ?", [$userId]);
             
             if(!$userData){
                 http_response_code(404);
@@ -83,7 +83,7 @@ class EnrollmentController {
             try {
                 sendCourseEnrollmentConfirmationEmail(
                     $userData['email'],
-                    $userData['name'],
+                    $userData['first_name'] . ' ' . $userData['last_name'],
                     $courseData['title'],
                     $courseData['instructor'],
                     $courseData['duration'],
@@ -193,10 +193,9 @@ class EnrollmentController {
                 $enrollmentId = $enrollment['id'];
             }
 
-            $stmt = $db->prepare("DELETE FROM course_enrollments WHERE id = ?");
-            $stmt->execute([$enrollmentId]);
+            $rowCount = $db->execute("DELETE FROM course_enrollments WHERE id = ?", [$enrollmentId]);
 
-            if($stmt->rowCount() > 0){
+            if($rowCount > 0){
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,

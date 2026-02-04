@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [uiState, setUiState] = useState({
+    emailError: "",
+    error: "",
+    success: "",
+    loading: false,
+  });
   const navigate = useNavigate();
 
   const validateEmail = (value: string): string => {
@@ -25,22 +27,21 @@ export function ForgotPassword() {
     const value = e.target.value;
     setEmail(value);
     // Validate field
-    setEmailError(validateEmail(value));
+    setUiState((prev) => ({ ...prev, emailError: validateEmail(value) }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    setUiState((prev) => ({ ...prev, error: "", success: "" }));
 
     // Validate email
     const emailValidationError = validateEmail(email);
     if (emailValidationError) {
-      setEmailError(emailValidationError);
+      setUiState((prev) => ({ ...prev, emailError: emailValidationError }));
       return;
     }
 
-    setLoading(true);
+    setUiState((prev) => ({ ...prev, loading: true }));
 
     try {
       const response = await fetch("/api/login/forgot-password.php", {
@@ -53,17 +54,27 @@ export function ForgotPassword() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Password reset link sent to your email");
+        setUiState((prev) => ({
+          ...prev,
+          success: "Password reset link sent to your email",
+          loading: false,
+        }));
         setEmail("");
         setTimeout(() => navigate("/"), 3000);
       } else {
-        setError(data.error || "Request failed");
+        setUiState((prev) => ({
+          ...prev,
+          error: data.error || "Request failed",
+          loading: false,
+        }));
       }
     } catch (error) {
       console.error("Request failed: ", error);
-      setError("Connection error. Please try again");
-    } finally {
-      setLoading(false);
+      setUiState((prev) => ({
+        ...prev,
+        error: "Connection error. Please try again",
+        loading: false,
+      }));
     }
   };
 
@@ -75,21 +86,21 @@ export function ForgotPassword() {
             <div className="card-body">
               <h2 className="card-title text-center mb-4">Forgot Password</h2>
 
-              {error && (
+              {uiState.error && (
                 <div
                   className="alert alert-danger alert-dismissible fade show"
                   role="alert"
                 >
-                  {error}
+                  {uiState.error}
                 </div>
               )}
 
-              {success && (
+              {uiState.success && (
                 <div
                   className="alert alert-success alert-dismissible fade show"
                   role="alert"
                 >
-                  {success}
+                  {uiState.success}
                 </div>
               )}
 
@@ -103,21 +114,23 @@ export function ForgotPassword() {
                     type="email"
                     value={email}
                     onChange={handleEmailChange}
-                    className={`form-control ${emailError ? "is-invalid" : email ? "is-valid" : ""}`}
+                    className={`form-control ${uiState.emailError ? "is-invalid" : email ? "is-valid" : ""}`}
                     placeholder="Enter your email"
-                    disabled={loading}
+                    disabled={uiState.loading}
                   />
-                  {emailError && (
-                    <div className="invalid-feedback d-block">{emailError}</div>
+                  {uiState.emailError && (
+                    <div className="invalid-feedback d-block">
+                      {uiState.emailError}
+                    </div>
                   )}
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !!emailError || !email}
+                  disabled={uiState.loading || !!uiState.emailError || !email}
                   className="btn btn-primary w-100"
                 >
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {uiState.loading ? "Sending..." : "Send Reset Link"}
                 </button>
               </form>
 

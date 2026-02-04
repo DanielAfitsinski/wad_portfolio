@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { adminService } from "../services/adminService";
-import { courseService } from "../services/courseService";
-import type { User, Course } from "../types";
+import { adminService } from "../../../services/adminService";
+import { courseService } from "../../../services/courseService";
+import type { User, Course, ApiError } from "../../../types";
 
 interface AssignCourseModalProps {
   show: boolean;
@@ -16,8 +16,10 @@ export function AssignCourseModal({
 }: AssignCourseModalProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [formData, setFormData] = useState({
+    selectedUserId: "",
+    selectedCourseId: "",
+  });
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState("");
@@ -45,12 +47,16 @@ export function AssignCourseModal({
     }
   };
 
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (!selectedUserId || !selectedCourseId) {
+    if (!formData.selectedUserId || !formData.selectedCourseId) {
       setError("Please select both a user and a course");
       return;
     }
@@ -59,8 +65,8 @@ export function AssignCourseModal({
 
     try {
       const response = await adminService.assignUserToCourse(
-        parseInt(selectedUserId),
-        parseInt(selectedCourseId),
+        parseInt(formData.selectedUserId),
+        parseInt(formData.selectedCourseId),
       );
       if (response.success) {
         setSuccess("User assigned to course successfully!");
@@ -71,16 +77,21 @@ export function AssignCourseModal({
       } else {
         setError(response.error || "Failed to assign user to course");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to assign user to course");
+    } catch (err) {
+      const error = err as ApiError;
+      setError(
+        error.response?.data?.error || "Failed to assign user to course",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setSelectedUserId("");
-    setSelectedCourseId("");
+    setFormData({
+      selectedUserId: "",
+      selectedCourseId: "",
+    });
     setError("");
     setSuccess("");
     onClose();
@@ -133,8 +144,10 @@ export function AssignCourseModal({
                     <select
                       className="form-select"
                       id="selectUser"
-                      value={selectedUserId}
-                      onChange={(e) => setSelectedUserId(e.target.value)}
+                      value={formData.selectedUserId}
+                      onChange={(e) =>
+                        handleChange("selectedUserId", e.target.value)
+                      }
                       required
                       disabled={loading}
                     >
@@ -155,8 +168,10 @@ export function AssignCourseModal({
                     <select
                       className="form-select"
                       id="selectCourse"
-                      value={selectedCourseId}
-                      onChange={(e) => setSelectedCourseId(e.target.value)}
+                      value={formData.selectedCourseId}
+                      onChange={(e) =>
+                        handleChange("selectedCourseId", e.target.value)
+                      }
                       required
                       disabled={loading}
                     >

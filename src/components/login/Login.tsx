@@ -2,14 +2,21 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { authService } from "../../services/authService";
+import type { ApiError } from "../../types";
 
 export function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [lockTimeRemaining, setLockTimeRemaining] = useState(0);
   const navigate = useNavigate();
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,15 +24,16 @@ export function Login() {
     setIsLocked(false);
 
     try {
-      await authService.login(email, password);
+      await authService.login(formData.email, formData.password);
       window.location.href = "/dashboard";
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       if (error.response?.status === 429) {
-        console.error("Account locked:", error.response.data.message);
+        console.error("Account locked:", error.response.data?.message);
         setIsLocked(true);
-        setLockTimeRemaining(error.response.data.lockedUntil || 5);
+        setLockTimeRemaining(error.response.data?.lockedUntil || 5);
         setError(
-          error.response.data.message ||
+          error.response.data?.message ||
             "Too many failed attempts. Please try again later.",
         );
       } else {
@@ -39,9 +47,9 @@ export function Login() {
     onSuccess: async (codeResponse) => {
       try {
         await authService.googleLogin(codeResponse.access_token);
-        console.log("Google login successful, redirecting...");
         window.location.href = "/dashboard";
-      } catch (error: any) {
+      } catch (err) {
+        const error = err as ApiError;
         console.error("Google login failed: ", error.response?.data?.error);
         setError(error.response?.data?.error || "Google login failed");
       }
@@ -78,8 +86,8 @@ export function Login() {
                   <input
                     id="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
                     className="form-control"
                     placeholder="Enter your email"
                     required
@@ -93,8 +101,8 @@ export function Login() {
                   <input
                     id="password"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={(e) => handleChange("password", e.target.value)}
                     className="form-control"
                     placeholder="Enter your password"
                     required

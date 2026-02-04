@@ -1,23 +1,11 @@
 import axiosInstance from "./axiosInstance";
-import type { Course, EnrolledCourse, ApiResponse } from "../types";
-
-interface UpdateCourseData {
-  title?: string;
-  description?: string;
-  full_description?: string;
-  instructor?: string;
-  duration?: string;
-  capacity?: number;
-}
-
-interface CreateCourseData {
-  title: string;
-  description: string;
-  full_description?: string;
-  instructor: string;
-  duration: string;
-  capacity: number;
-}
+import type {
+  Course,
+  EnrolledCourse,
+  ApiResponse,
+  UpdateCourseData,
+  CreateCourseData,
+} from "../types";
 
 export const courseService = {
   async getCourses(): Promise<Course[]> {

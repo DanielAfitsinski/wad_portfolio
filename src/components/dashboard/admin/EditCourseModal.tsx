@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import type { Course, User } from "../../../types";
+import type {
+  Course,
+  User,
+  UserCourseAssignment,
+  ApiError,
+} from "../../../types";
 import { adminService } from "../../../services/adminService";
 import { courseService } from "../../../services/courseService";
 
@@ -11,15 +16,6 @@ interface EditCourseModalProps {
 }
 
 type TabType = "details" | "assignments" | "assign";
-
-interface UserCourseAssignment {
-  id: number;
-  user_id: number;
-  course_id: number;
-  enrolled_at: string;
-  user_name?: string;
-  user_email?: string;
-}
 
 export function EditCourseModal({
   show,
@@ -35,24 +31,28 @@ export function EditCourseModal({
   );
 
   // Course form
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [fullDescription, setFullDescription] = useState("");
-  const [instructor, setInstructor] = useState("");
-  const [duration, setDuration] = useState("");
-  const [capacity, setCapacity] = useState(0);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    full_description: "",
+    instructor: "",
+    duration: "",
+    capacity: 0,
+  });
 
   // Assignment form
   const [selectedUserId, setSelectedUserId] = useState("");
 
   useEffect(() => {
     if (course) {
-      setTitle(course.title);
-      setDescription(course.description);
-      setFullDescription(course.full_description || "");
-      setInstructor(course.instructor);
-      setDuration(course.duration);
-      setCapacity(course.capacity);
+      setFormData({
+        title: course.title,
+        description: course.description,
+        full_description: course.full_description || "",
+        instructor: course.instructor,
+        duration: course.duration,
+        capacity: course.capacity,
+      });
     }
   }, [course]);
 
@@ -83,7 +83,7 @@ export function EditCourseModal({
         const user = users.find((u) => u.id === assignment.user_id);
         return {
           ...assignment,
-          user_name: user?.name,
+          user_name: user ? `${user.first_name} ${user.last_name}` : undefined,
           user_email: user?.email,
         };
       });
@@ -94,25 +94,23 @@ export function EditCourseModal({
     }
   };
 
+  const handleChange = (field: string, value: string | number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleUpdateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!course) return;
 
     setLoading(true);
     try {
-      await courseService.updateCourse(course.id, {
-        title,
-        description,
-        full_description: fullDescription,
-        instructor,
-        duration,
-        capacity,
-      });
+      await courseService.updateCourse(course.id, formData);
 
       alert("Course updated successfully!");
       onUpdate?.();
       onClose();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error("Failed to update course:", error);
       alert(error.response?.data?.error || "Failed to update course");
     } finally {
@@ -135,7 +133,8 @@ export function EditCourseModal({
       setSelectedUserId("");
       await loadData();
       onUpdate?.();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error("Failed to assign user:", error);
       alert(error.response?.data?.error || "Failed to assign user");
     } finally {
@@ -158,7 +157,8 @@ export function EditCourseModal({
       alert("User unassigned successfully!");
       await loadData();
       onUpdate?.();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error("Failed to unassign user:", error);
       alert(error.response?.data?.error || "Failed to unassign user");
     } finally {
@@ -188,7 +188,8 @@ export function EditCourseModal({
       alert("Course deleted successfully!");
       onUpdate?.();
       onClose();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error("Failed to delete course:", error);
       alert(error.response?.data?.error || "Failed to delete course");
     } finally {
@@ -270,8 +271,8 @@ export function EditCourseModal({
                       <input
                         type="text"
                         className="form-control"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        value={formData.title}
+                        onChange={(e) => handleChange("title", e.target.value)}
                         required
                       />
                     </div>
@@ -281,8 +282,10 @@ export function EditCourseModal({
                       <textarea
                         className="form-control"
                         rows={2}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        value={formData.description}
+                        onChange={(e) =>
+                          handleChange("description", e.target.value)
+                        }
                         required
                       />
                     </div>
@@ -294,8 +297,10 @@ export function EditCourseModal({
                       <textarea
                         className="form-control"
                         rows={4}
-                        value={fullDescription}
-                        onChange={(e) => setFullDescription(e.target.value)}
+                        value={formData.full_description}
+                        onChange={(e) =>
+                          handleChange("full_description", e.target.value)
+                        }
                       />
                     </div>
 
@@ -305,8 +310,10 @@ export function EditCourseModal({
                         <input
                           type="text"
                           className="form-control"
-                          value={instructor}
-                          onChange={(e) => setInstructor(e.target.value)}
+                          value={formData.instructor}
+                          onChange={(e) =>
+                            handleChange("instructor", e.target.value)
+                          }
                           required
                         />
                       </div>
@@ -316,8 +323,10 @@ export function EditCourseModal({
                         <input
                           type="text"
                           className="form-control"
-                          value={duration}
-                          onChange={(e) => setDuration(e.target.value)}
+                          value={formData.duration}
+                          onChange={(e) =>
+                            handleChange("duration", e.target.value)
+                          }
                           placeholder="e.g., 8 weeks"
                           required
                         />
@@ -329,8 +338,10 @@ export function EditCourseModal({
                       <input
                         type="number"
                         className="form-control"
-                        value={capacity}
-                        onChange={(e) => setCapacity(parseInt(e.target.value))}
+                        value={formData.capacity}
+                        onChange={(e) =>
+                          handleChange("capacity", parseInt(e.target.value))
+                        }
                         min={course.enrolled}
                         required
                       />

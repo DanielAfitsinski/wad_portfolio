@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
-import {
-  adminService,
-  type UpdateUserData,
-} from "../../../services/adminService";
-import type { User } from "../../../types";
+import { adminService } from "../../../services/adminService";
+import type { User, UpdateUserData, ApiError } from "../../../types";
 import { AddUserModal } from "./AddUserModal";
 
 interface ManageUsersModalProps {
@@ -45,8 +42,9 @@ export function ManageUsersModal({
     try {
       const data = await adminService.getAllUsers();
       setUsers(data);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load users");
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.response?.data?.error || "Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -74,8 +72,9 @@ export function ManageUsersModal({
       setEditingUser(null);
       loadUsers();
       onRefresh?.();
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update user");
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.response?.data?.error || "Failed to update user");
     } finally {
       setSaving(false);
     }
@@ -91,8 +90,9 @@ export function ManageUsersModal({
       await adminService.deleteUser(userId);
       loadUsers();
       onRefresh?.();
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete user");
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.response?.data?.error || "Failed to delete user");
     }
   };
 
@@ -226,6 +226,7 @@ export function ManageUsersModal({
                                           | "admin",
                                       })
                                     }
+                                    style={{ minWidth: "100px" }}
                                   >
                                     <option value="user">User</option>
                                     <option value="admin">Admin</option>

@@ -10,17 +10,27 @@ interface AdminPanelProps {
 }
 
 export function AdminPanel({ show, onClose, onRefresh }: AdminPanelProps) {
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [showAddCourseModal, setShowAddCourseModal] = useState(false);
-  const [showManageUsersModal, setShowManageUsersModal] = useState(false);
+  const [modals, setModals] = useState({
+    addUser: false,
+    addCourse: false,
+    manageUsers: false,
+  });
+
+  const openModal = (modal: keyof typeof modals) => {
+    setModals((prev) => ({ ...prev, [modal]: true }));
+  };
+
+  const closeModal = (modal: keyof typeof modals) => {
+    setModals((prev) => ({ ...prev, [modal]: false }));
+  };
 
   const handleUserAdded = () => {
-    setShowAddUserModal(false);
+    closeModal("addUser");
     onRefresh?.();
   };
 
   const handleCourseAdded = () => {
-    setShowAddCourseModal(false);
+    closeModal("addCourse");
     onRefresh?.();
   };
 
@@ -46,14 +56,14 @@ export function AdminPanel({ show, onClose, onRefresh }: AdminPanelProps) {
               <div className="d-grid gap-2">
                 <button
                   className="btn btn-primary"
-                  onClick={() => setShowManageUsersModal(true)}
+                  onClick={() => openModal("manageUsers")}
                 >
                   Manage Users
                 </button>
 
                 <button
                   className="btn btn-success"
-                  onClick={() => setShowAddCourseModal(true)}
+                  onClick={() => openModal("addCourse")}
                 >
                   Add New Course
                 </button>
@@ -73,18 +83,18 @@ export function AdminPanel({ show, onClose, onRefresh }: AdminPanelProps) {
       </div>
 
       <ManageUsersModal
-        show={showManageUsersModal}
-        onClose={() => setShowManageUsersModal(false)}
+        show={modals.manageUsers}
+        onClose={() => closeModal("manageUsers")}
         onRefresh={onRefresh}
       />
       <AddUserModal
-        show={showAddUserModal}
-        onClose={() => setShowAddUserModal(false)}
+        show={modals.addUser}
+        onClose={() => closeModal("addUser")}
         onUserAdded={handleUserAdded}
       />
       <AddCourseModal
-        show={showAddCourseModal}
-        onClose={() => setShowAddCourseModal(false)}
+        show={modals.addCourse}
+        onClose={() => closeModal("addCourse")}
         onCourseAdded={handleCourseAdded}
       />
     </>

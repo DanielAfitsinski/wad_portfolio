@@ -1,35 +1,11 @@
 import axiosInstance from "./axiosInstance";
-import type { User, ApiResponse } from "../types";
-
-export interface CreateUserData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  job_title: string;
-  role?: "user" | "admin";
-  is_active?: boolean;
-}
-
-export interface UpdateUserData {
-  id: number;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  job_title?: string;
-  role?: "user" | "admin";
-  is_active?: boolean;
-}
-
-export interface UserCourseAssignment {
-  id: number;
-  user_id: number;
-  course_id: number;
-  enrolled_at: string;
-  user_name?: string;
-  user_email?: string;
-  course_title?: string;
-}
+import type {
+  User,
+  ApiResponse,
+  CreateUserData,
+  UpdateUserData,
+  UserCourseAssignment,
+} from "../types";
 
 export const adminService = {
   // Users

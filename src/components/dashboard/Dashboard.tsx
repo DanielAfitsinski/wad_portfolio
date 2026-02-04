@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { User, Course, EnrolledCourse } from "../../types";
+import type { User, Course, EnrolledCourse, ApiError } from "../../types";
 import { authService } from "../../services/authService";
 import { courseService } from "../../services/courseService";
 import { EnrolledCoursesSection } from "./courses/EnrolledCoursesSection";
@@ -49,7 +49,8 @@ export function Dashboard() {
       setEnrolledCourses(updatedEnrolled);
 
       alert("Successfully enrolled! Check your email for confirmation.");
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error("Enrollment failed: ", error);
     }
   };
@@ -64,7 +65,8 @@ export function Dashboard() {
         const enrolled = await courseService.getEnrolledCourses(user.id);
         setEnrolledCourses(enrolled);
       }
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error(
         "Unenrollment failed: ",
         error.response?.data?.error || error.message,

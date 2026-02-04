@@ -1,9 +1,6 @@
 import { useState } from "react";
-
-import {
-  adminService,
-  type CreateUserData,
-} from "../../../services/adminService";
+import { adminService } from "../../../services/adminService";
+import type { CreateUserData, ApiError } from "../../../types";
 
 interface AddUserModalProps {
   show: boolean;
@@ -46,8 +43,9 @@ export function AddUserModal({
       } else {
         setError(response.error || "Failed to create user");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to create user");
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.response?.data?.error || "Failed to create user");
     } finally {
       setLoading(false);
     }

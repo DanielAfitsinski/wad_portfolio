@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/mail.php';
 
 class UserController {
     private $db;
@@ -215,10 +216,9 @@ class UserController {
             $this->db->execute("DELETE FROM course_enrollments WHERE user_id = ?", [$userId]);
             
             // Delete user
-            $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
-            $stmt->execute([$userId]);
+            $rowCount = $this->db->execute("DELETE FROM users WHERE id = ?", [$userId]);
             
-            if ($stmt->rowCount() === 0) {
+            if ($rowCount === 0) {
                 http_response_code(404);
                 return json_encode([
                     'success' => false,
@@ -316,8 +316,8 @@ class UserController {
                 ]);
             }
             
-            // Verify user exists
-            $user = $this->db->queryOne("SELECT id FROM users WHERE id = ?", [$userId]);
+            // Verify user exists and get user details
+            $user = $this->db->queryOne("SELECT id, email, first_name, last_name FROM users WHERE id = ?", [$userId]);
             if (!$user) {
                 http_response_code(404);
                 return json_encode([
@@ -326,8 +326,8 @@ class UserController {
                 ]);
             }
             
-            // Verify course exists
-            $course = $this->db->queryOne("SELECT id, capacity FROM courses WHERE id = ?", [$courseId]);
+            // Verify course exists and get course details
+            $course = $this->db->queryOne("SELECT id, title, instructor, duration, capacity FROM courses WHERE id = ?", [$courseId]);
             if (!$course) {
                 http_response_code(404);
                 return json_encode([
@@ -368,6 +368,22 @@ class UserController {
                 [$userId, $courseId]
             );
             
+            $enrollmentDate = date('Y-m-d H:i:s');
+            
+            // Send confirmation email
+            try {
+                sendCourseEnrollmentConfirmationEmail(
+                    $user['email'],
+                    $user['first_name'] . ' ' . $user['last_name'],
+                    $course['title'],
+                    $course['instructor'],
+                    $course['duration'],
+                    $enrollmentDate
+                );
+            } catch(Exception $emailError) {
+                error_log('Email sending failed: ' . $emailError->getMessage());
+            }
+            
             return json_encode([
                 'success' => true,
                 'message' => 'User assigned to course successfully'
@@ -397,10 +413,9 @@ class UserController {
             }
             
             // Delete enrollment
-            $stmt = $this->db->prepare("DELETE FROM course_enrollments WHERE user_id = ? AND course_id = ?");
-            $stmt->execute([$userId, $courseId]);
+            $rowCount = $this->db->execute("DELETE FROM course_enrollments WHERE user_id = ? AND course_id = ?", [$userId, $courseId]);
             
-            if ($stmt->rowCount() === 0) {
+            if ($rowCount === 0) {
                 http_response_code(404);
                 return json_encode([
                     'success' => false,

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { courseService } from "../../../services/courseService";
+import type { ApiError, CreateCourseData } from "../../../types";
 
 interface AddCourseModalProps {
   show: boolean;
@@ -7,18 +8,29 @@ interface AddCourseModalProps {
   onCourseAdded?: () => void;
 }
 
+const initialFormData: CreateCourseData = {
+  title: "",
+  description: "",
+  full_description: "",
+  instructor: "",
+  duration: "",
+  capacity: 30,
+};
+
 export function AddCourseModal({
   show,
   onClose,
   onCourseAdded,
 }: AddCourseModalProps) {
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [fullDescription, setFullDescription] = useState("");
-  const [instructor, setInstructor] = useState("");
-  const [duration, setDuration] = useState("");
-  const [capacity, setCapacity] = useState(30);
+  const [formData, setFormData] = useState<CreateCourseData>(initialFormData);
+
+  const handleChange = (
+    field: keyof CreateCourseData,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,26 +38,18 @@ export function AddCourseModal({
 
     try {
       await courseService.createCourse({
-        title,
-        description,
-        full_description: fullDescription || undefined,
-        instructor,
-        duration,
-        capacity,
+        ...formData,
+        full_description: formData.full_description || undefined,
       });
 
       alert("Course created successfully!");
 
       // Reset form
-      setTitle("");
-      setDescription("");
-      setFullDescription("");
-      setInstructor("");
-      setDuration("");
-      setCapacity(30);
+      setFormData(initialFormData);
 
       onCourseAdded?.();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       console.error("Failed to create course:", error);
       alert(error.response?.data?.error || "Failed to create course");
     } finally {
@@ -89,8 +93,8 @@ export function AddCourseModal({
                 <input
                   type="text"
                   className="form-control"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={formData.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
                   placeholder="e.g., Introduction to Python Programming"
                   required
                 />
@@ -103,8 +107,8 @@ export function AddCourseModal({
                 <textarea
                   className="form-control"
                   rows={2}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formData.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
                   placeholder="Brief description shown on course card"
                   required
                 />
@@ -120,8 +124,10 @@ export function AddCourseModal({
                 <textarea
                   className="form-control"
                   rows={4}
-                  value={fullDescription}
-                  onChange={(e) => setFullDescription(e.target.value)}
+                  value={formData.full_description || ""}
+                  onChange={(e) =>
+                    handleChange("full_description", e.target.value)
+                  }
                   placeholder="Detailed course description (shown when user expands)"
                 />
                 <small className="text-muted">
@@ -138,8 +144,8 @@ export function AddCourseModal({
                   <input
                     type="text"
                     className="form-control"
-                    value={instructor}
-                    onChange={(e) => setInstructor(e.target.value)}
+                    value={formData.instructor}
+                    onChange={(e) => handleChange("instructor", e.target.value)}
                     placeholder="e.g., Dr. Jane Smith"
                     required
                   />
@@ -152,8 +158,8 @@ export function AddCourseModal({
                   <input
                     type="text"
                     className="form-control"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
+                    value={formData.duration}
+                    onChange={(e) => handleChange("duration", e.target.value)}
                     placeholder="e.g., 8 weeks, 3 months"
                     required
                   />
@@ -167,8 +173,10 @@ export function AddCourseModal({
                 <input
                   type="number"
                   className="form-control"
-                  value={capacity}
-                  onChange={(e) => setCapacity(parseInt(e.target.value))}
+                  value={formData.capacity}
+                  onChange={(e) =>
+                    handleChange("capacity", parseInt(e.target.value))
+                  }
                   min={1}
                   max={1000}
                   required

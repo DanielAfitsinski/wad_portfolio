@@ -21,10 +21,8 @@ function getCurrentUser() {
     }
     
     try {
-        $pdo = getDBConnection();
-        $stmt = $pdo->prepare("SELECT id, first_name, last_name, email, job_title, role FROM users WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
-        return $stmt->fetch();
+        $db = Database::getInstance();
+        return $db->queryOne("SELECT id, first_name, last_name, email, job_title, role FROM users WHERE id = ?", [$_SESSION['user_id']]);
     } catch (Exception $e) {
         return null;
     }
@@ -45,10 +43,8 @@ function requireAdmin() {
     }
     
     try {
-        $pdo = getDBConnection();
-        $stmt = $pdo->prepare("SELECT id, role FROM users WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
-        $user = $stmt->fetch();
+        $db = Database::getInstance();
+        $user = $db->queryOne("SELECT id, role FROM users WHERE id = ?", [$_SESSION['user_id']]);
         
         if (!$user || $user['role'] !== 'admin') {
             http_response_code(403);
@@ -75,16 +71,14 @@ function verifyAuthToken() {
     }
     
     try {
-        $pdo = getDBConnection();
+        $db = Database::getInstance();
         
-        $stmt = $pdo->prepare("
+        $user = $db->queryOne("
             SELECT u.id, u.email, u.first_name, u.last_name, u.role 
             FROM auth_tokens at
             JOIN users u ON at.user_id = u.id
             WHERE at.token = ? AND at.expires_at > NOW() AND u.is_active = 1
-        ");
-        $stmt->execute([$token]);
-        $user = $stmt->fetch();
+        ", [$token]);
         
         if (!$user) {
             http_response_code(401);

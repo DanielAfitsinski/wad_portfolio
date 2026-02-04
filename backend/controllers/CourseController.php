@@ -104,19 +104,10 @@ class CourseController {
                 $fullDescription = null;
             }
 
-            $stmt = $db->prepare("
+            $db->execute("
                 INSERT INTO courses (title, description, full_description, instructor, duration, capacity)
-                VALUES (:title, :description, :full_description, :instructor, :duration, :capacity)
-            ");
-
-            $stmt->execute([
-                'title' => $title,
-                'description' => $description,
-                'full_description' => $fullDescription,
-                'instructor' => $instructor,
-                'duration' => $duration,
-                'capacity' => $capacity
-            ]);
+                VALUES (?, ?, ?, ?, ?, ?)
+            ", [$title, $description, $fullDescription, $instructor, $duration, $capacity]);
 
             http_response_code(201);
             echo json_encode([
@@ -148,7 +139,7 @@ class CourseController {
 
             // Build update query
             $fields = [];
-            $params = ['id' => $data['id']];
+            $params = [];
 
             if (isset($data['title'])) {
                 $title = trim($data['title']);
@@ -157,8 +148,8 @@ class CourseController {
                     echo json_encode(['error' => 'Course title cannot be empty']);
                     return;
                 }
-                $fields[] = 'title = :title';
-                $params['title'] = $title;
+                $fields[] = 'title = ?';
+                $params[] = $title;
             }
             if (isset($data['description'])) {
                 $description = trim($data['description']);
@@ -167,13 +158,13 @@ class CourseController {
                     echo json_encode(['error' => 'Course description cannot be empty']);
                     return;
                 }
-                $fields[] = 'description = :description';
-                $params['description'] = $description;
+                $fields[] = 'description = ?';
+                $params[] = $description;
             }
             if (isset($data['full_description'])) {
                 $fullDescription = trim($data['full_description']);
-                $fields[] = 'full_description = :full_description';
-                $params['full_description'] = $fullDescription ?: null;
+                $fields[] = 'full_description = ?';
+                $params[] = $fullDescription ?: null;
             }
             if (isset($data['instructor'])) {
                 $instructor = trim($data['instructor']);
@@ -182,8 +173,8 @@ class CourseController {
                     echo json_encode(['error' => 'Instructor name cannot be empty']);
                     return;
                 }
-                $fields[] = 'instructor = :instructor';
-                $params['instructor'] = $instructor;
+                $fields[] = 'instructor = ?';
+                $params[] = $instructor;
             }
             if (isset($data['duration'])) {
                 $duration = trim($data['duration']);
@@ -192,8 +183,8 @@ class CourseController {
                     echo json_encode(['error' => 'Course duration cannot be empty']);
                     return;
                 }
-                $fields[] = 'duration = :duration';
-                $params['duration'] = $duration;
+                $fields[] = 'duration = ?';
+                $params[] = $duration;
             }
             if (isset($data['capacity'])) {
                 $capacity = (int)$data['capacity'];
@@ -206,8 +197,8 @@ class CourseController {
 
                 // Validate capacity
                 $enrollmentCheck = $db->queryOne("
-                    SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = :id
-                ", ['id' => $data['id']]);
+                    SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = ?
+                ", [$data['id']]);
                 $enrolled = $enrollmentCheck['enrolled'];
 
                 if ($capacity < $enrolled) {
@@ -216,8 +207,8 @@ class CourseController {
                     return;
                 }
 
-                $fields[] = 'capacity = :capacity';
-                $params['capacity'] = $capacity;
+                $fields[] = 'capacity = ?';
+                $params[] = $capacity;
             }
 
             if (empty($fields)) {
@@ -226,9 +217,10 @@ class CourseController {
                 return;
             }
 
-            $sql = "UPDATE courses SET " . implode(', ', $fields) . " WHERE id = :id";
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
+            // Add id to params for WHERE clause
+            $params[] = $data['id'];
+            $sql = "UPDATE courses SET " . implode(', ', $fields) . " WHERE id = ?";
+            $db->execute($sql, $params);
 
             http_response_code(200);
             echo json_encode([
@@ -259,8 +251,8 @@ class CourseController {
 
             // Check enrollments
             $enrollmentCheck = $db->queryOne("
-                SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = :id
-            ", ['id' => $data['id']]);
+                SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = ?
+            ", [$data['id']]);
             $enrolled = $enrollmentCheck['enrolled'];
 
             if ($enrolled > 0) {
@@ -269,10 +261,9 @@ class CourseController {
                 return;
             }
 
-            $stmt = $db->prepare("DELETE FROM courses WHERE id = :id");
-            $stmt->execute(['id' => $data['id']]);
+            $rowCount = $db->execute("DELETE FROM courses WHERE id = ?", [$data['id']]);
 
-            if ($stmt->rowCount() === 0) {
+            if ($rowCount === 0) {
                 http_response_code(404);
                 echo json_encode(['error' => 'Course not found']);
                 return;

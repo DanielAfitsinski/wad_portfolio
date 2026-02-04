@@ -61,3 +61,9 @@ coverage
 .nyc_output
 
 WAD_DTS_Portfolio.pdf
+design-documentation/DATABASE-ERD.md
+design-documentation/README.md
+design-documentation/TECHNICAL-NOTES.md
+design-documentation/USER-JOURNEYS.md
+design-documentation/WIREFRAMES.md
+design-documentation

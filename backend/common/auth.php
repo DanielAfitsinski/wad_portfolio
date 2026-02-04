@@ -6,7 +6,7 @@ function verifyUserSession() {
     
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized: Please login']);
+        echo json_encode(['error' => 'Unauthorised: Please login']);
         exit();
     }
     
@@ -38,7 +38,7 @@ function requireAdmin() {
     
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized: Please login']);
+        echo json_encode(['error' => 'Unauthorised: Please login']);
         exit();
     }
     
@@ -66,7 +66,7 @@ function verifyAuthToken() {
     
     if (!$token) {
         http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized: Please login']);
+        echo json_encode(['error' => 'Unauthorised: Please login']);
         exit();
     }
     
@@ -82,7 +82,7 @@ function verifyAuthToken() {
         
         if (!$user) {
             http_response_code(401);
-            echo json_encode(['error' => 'Unauthorized: Invalid or expired token']);
+            echo json_encode(['error' => 'Unauthorised: Invalid or expired token']);
             exit();
         }
         

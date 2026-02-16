@@ -41,13 +41,6 @@ export const adminService = {
     return response.data.data || [];
   },
 
-  async getUserCourses(userId: number) {
-    const response = await axiosInstance.get(
-      `/user-courses.php?user_id=${userId}`,
-    );
-    return response.data;
-  },
-
   async assignUserToCourse(userId: number, courseId: number) {
     const response = await axiosInstance.post("/user-courses.php", {
       user_id: userId,

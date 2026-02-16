@@ -66,12 +66,4 @@ export const courseService = {
     });
     return response.data;
   },
-
-  async removeEnrollmentByUserAndCourse(userId: number, courseId: number) {
-    const response = await axiosInstance.post("/courses/unenroll.php", {
-      user_id: userId,
-      coruse_id: courseId,
-    });
-    return response.data;
-  },
 };

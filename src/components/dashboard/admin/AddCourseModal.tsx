@@ -16,7 +16,8 @@ const initialFormData: CreateCourseData = {
   description: "",
   full_description: "",
   instructor: "",
-  duration: "",
+  start_date: "",
+  end_date: "",
   capacity: 30,
 };
 
@@ -159,37 +160,52 @@ export function AddCourseModal({
 
                 <div className="col-md-6 mb-3">
                   <label className="form-label fw-bold">
-                    Duration <span className="text-danger">*</span>
+                    Capacity <span className="text-danger">*</span>
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     className="form-control"
-                    value={formData.duration}
-                    onChange={(e) => handleChange("duration", e.target.value)}
-                    placeholder="e.g., 8 weeks, 3 months"
+                    value={formData.capacity}
+                    onChange={(e) =>
+                      handleChange("capacity", parseInt(e.target.value))
+                    }
+                    min={1}
+                    max={1000}
                     required
                   />
+                  <small className="text-muted">
+                    Maximum number of students that can enroll
+                  </small>
                 </div>
               </div>
 
-              <div className="mb-3">
-                <label className="form-label fw-bold">
-                  Capacity <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={formData.capacity}
-                  onChange={(e) =>
-                    handleChange("capacity", parseInt(e.target.value))
-                  }
-                  min={1}
-                  max={1000}
-                  required
-                />
-                <small className="text-muted">
-                  Maximum number of students that can enroll
-                </small>
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-bold">
+                    Start Date <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={formData.start_date}
+                    onChange={(e) => handleChange("start_date", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-bold">
+                    End Date <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={formData.end_date}
+                    onChange={(e) => handleChange("end_date", e.target.value)}
+                    min={formData.start_date}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="alert alert-info">

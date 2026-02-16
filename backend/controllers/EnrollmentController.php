@@ -47,11 +47,11 @@ class EnrollmentController {
 
             // Fetch course details with current enrollment count
             $courseData = $db->queryOne("
-                SELECT c.id, c.title, c.instructor, c.duration, c.capacity, COUNT(ce.id) AS enrolled
+                SELECT c.id, c.title, c.instructor, c.start_date, c.end_date, c.capacity, COUNT(ce.id) AS enrolled
                 FROM courses c
                 LEFT JOIN course_enrollments ce ON c.id = ce.course_id
                 WHERE c.id = ?
-                GROUP BY c.id, c.title, c.instructor, c.duration, c.capacity
+                GROUP BY c.id, c.title, c.instructor, c.start_date, c.end_date, c.capacity
             ", [$courseId]);
 
             if(!$courseData){
@@ -92,7 +92,7 @@ class EnrollmentController {
                     $userData['first_name'] . ' ' . $userData['last_name'],
                     $courseData['title'],
                     $courseData['instructor'],
-                    $courseData['duration'],
+                    $courseData['start_date'] . ' - ' . $courseData['end_date'],
                     $enrollmentDate
                 );
             } catch(Exception $emailError) {
@@ -135,7 +135,8 @@ class EnrollmentController {
                     c.title,
                     c.description,
                     c.instructor,
-                    c.duration,
+                    c.start_date,
+                    c.end_date,
                     c.capacity,
                     ce.enrolled_at AS enrollmentDate,
                     ce.id AS enrollmentId,

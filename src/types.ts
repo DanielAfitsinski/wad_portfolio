@@ -18,7 +18,8 @@ export interface Course {
   description: string;
   full_description?: string;
   instructor: string;
-  duration: string;
+  start_date: string;
+  end_date: string;
   enrolled: number;
   capacity: number;
 }
@@ -84,7 +85,8 @@ export interface UpdateCourseData {
   description?: string;
   full_description?: string;
   instructor?: string;
-  duration?: string;
+  start_date?: string;
+  end_date?: string;
   capacity?: number;
 }
 
@@ -93,7 +95,8 @@ export interface CreateCourseData {
   description: string;
   full_description?: string;
   instructor: string;
-  duration: string;
+  start_date: string;
+  end_date: string;
   capacity: number;
 }
 

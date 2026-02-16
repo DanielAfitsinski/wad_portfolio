@@ -27,12 +27,13 @@ class CourseController {
                     c.description,
                     c.full_description,
                     c.instructor,
-                    c.duration,
+                    c.start_date,
+                    c.end_date,
                     c.capacity,
                     COUNT(ce.id) AS enrolled
                 FROM courses c
                 LEFT JOIN course_enrollments ce ON c.id = ce.course_id
-                GROUP BY c.id, c.title, c.description, c.full_description, c.instructor, c.duration, c.capacity
+                GROUP BY c.id, c.title, c.description, c.full_description, c.instructor, c.start_date, c.end_date, c.capacity
                 ORDER BY c.id
             ");
 
@@ -58,8 +59,8 @@ class CourseController {
 
             // Validate required fields
             if (!isset($data['title']) || !isset($data['description']) || 
-                !isset($data['instructor']) || !isset($data['duration']) || 
-                !isset($data['capacity'])) {
+                !isset($data['instructor']) || !isset($data['start_date']) || 
+                !isset($data['end_date']) || !isset($data['capacity'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Missing required fields']);
                 return;
@@ -69,7 +70,8 @@ class CourseController {
             $title = trim($data['title']);
             $description = trim($data['description']);
             $instructor = trim($data['instructor']);
-            $duration = trim($data['duration']);
+            $startDate = trim($data['start_date']);
+            $endDate = trim($data['end_date']);
             $capacity = (int)$data['capacity'];
 
             if (empty($title)) {
@@ -90,9 +92,28 @@ class CourseController {
                 return;
             }
 
-            if (empty($duration)) {
+            if (empty($startDate)) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Course duration cannot be empty']);
+                echo json_encode(['error' => 'Course start date cannot be empty']);
+                return;
+            }
+
+            if (empty($endDate)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Course end date cannot be empty']);
+                return;
+            }
+            
+            // Validate date format and order
+            if (!strtotime($startDate) || !strtotime($endDate)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid date format']);
+                return;
+            }
+            
+            if (strtotime($endDate) < strtotime($startDate)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'End date must be after start date']);
                 return;
             }
 
@@ -112,9 +133,9 @@ class CourseController {
 
             // Insert new course into database
             $db->execute("
-                INSERT INTO courses (title, description, full_description, instructor, duration, capacity)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ", [$title, $description, $fullDescription, $instructor, $duration, $capacity]);
+                INSERT INTO courses (title, description, full_description, instructor, start_date, end_date, capacity)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ", [$title, $description, $fullDescription, $instructor, $startDate, $endDate, $capacity]);
 
             http_response_code(201);
             echo json_encode([
@@ -192,16 +213,28 @@ class CourseController {
                 $params[] = $instructor;
             }
             
-            // Update duration if provided
-            if (isset($data['duration'])) {
-                $duration = trim($data['duration']);
-                if (empty($duration)) {
+            // Update start_date if provided
+            if (isset($data['start_date'])) {
+                $startDate = trim($data['start_date']);
+                if (empty($startDate) || !strtotime($startDate)) {
                     http_response_code(400);
-                    echo json_encode(['error' => 'Course duration cannot be empty']);
+                    echo json_encode(['error' => 'Invalid start date']);
                     return;
                 }
-                $fields[] = 'duration = ?';
-                $params[] = $duration;
+                $fields[] = 'start_date = ?';
+                $params[] = $startDate;
+            }
+            
+            // Update end_date if provided
+            if (isset($data['end_date'])) {
+                $endDate = trim($data['end_date']);
+                if (empty($endDate) || !strtotime($endDate)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid end date']);
+                    return;
+                }
+                $fields[] = 'end_date = ?';
+                $params[] = $endDate;
             }
             
             // Update capacity if provided and validate against current enrollment

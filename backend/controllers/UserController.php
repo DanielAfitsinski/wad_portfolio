@@ -291,7 +291,8 @@ class UserController {
                     c.title,
                     c.description,
                     c.instructor,
-                    c.duration
+                    c.start_date,
+                    c.end_date
                 FROM course_enrollments e
                 JOIN courses c ON e.course_id = c.id
                 WHERE e.user_id = ?
@@ -336,7 +337,7 @@ class UserController {
             }
             
             // Verify course exists and get course details
-            $course = $this->db->queryOne("SELECT id, title, instructor, duration, capacity FROM courses WHERE id = ?", [$courseId]);
+            $course = $this->db->queryOne("SELECT id, title, instructor, start_date, end_date, capacity FROM courses WHERE id = ?", [$courseId]);
             if (!$course) {
                 http_response_code(404);
                 return json_encode([
@@ -386,7 +387,7 @@ class UserController {
                     $user['first_name'] . ' ' . $user['last_name'],
                     $course['title'],
                     $course['instructor'],
-                    $course['duration'],
+                    $course['start_date'] . ' - ' . $course['end_date'],
                     $enrollmentDate
                 );
             } catch(Exception $emailError) {

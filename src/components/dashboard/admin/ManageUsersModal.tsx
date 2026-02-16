@@ -32,6 +32,7 @@ export function ManageUsersModal({
   });
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load users when modal opens
   useEffect(() => {
@@ -113,6 +114,18 @@ export function ManageUsersModal({
 
   if (!show) return null;
 
+  // Filter users based on search query
+  const filteredUsers = users.filter((user) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      user.first_name.toLowerCase().includes(searchLower) ||
+      user.last_name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      (user.job_title && user.job_title.toLowerCase().includes(searchLower)) ||
+      user.role.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <>
       <div
@@ -153,6 +166,32 @@ export function ManageUsersModal({
                 </div>
               ) : (
                 <>
+                  <div className="mb-3">
+                    <div className="input-group">
+                      <span className="input-group-text">
+                        <i className="bi bi-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Search by name, email, job title, or role..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      {searchQuery && (
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setSearchQuery("")}
+                        >
+                          <i className="bi bi-x"></i>
+                        </button>
+                      )}
+                    </div>
+                    <small className="text-muted">
+                      Showing {filteredUsers.length} of {users.length} user(s)
+                    </small>
+                  </div>
                   <div className="table-responsive">
                     <table className="table table-hover">
                       <thead className="table-light">
@@ -167,185 +206,197 @@ export function ManageUsersModal({
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map((user) => (
-                          <tr key={user.id}>
-                            {editingUser?.id === user.id ? (
-                              <>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className="form-control form-control-sm"
-                                    value={editFormData.first_name || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        first_name: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className="form-control form-control-sm"
-                                    value={editFormData.last_name || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        last_name: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="email"
-                                    className="form-control form-control-sm"
-                                    value={editFormData.email}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        email: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className="form-control form-control-sm"
-                                    value={editFormData.job_title}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        job_title: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </td>
-                                <td>
-                                  <select
-                                    className="form-select form-select-sm"
-                                    value={editFormData.role}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        role: e.target.value as
-                                          | "user"
-                                          | "admin",
-                                      })
-                                    }
-                                    style={{ minWidth: "100px" }}
-                                  >
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
-                                  </select>
-                                </td>
-                                <td>
-                                  <div className="form-check">
+                        {filteredUsers.length === 0 && searchQuery ? (
+                          <tr>
+                            <td
+                              colSpan={7}
+                              className="text-center py-4 text-muted"
+                            >
+                              <i className="bi bi-search fs-3 d-block mb-2"></i>
+                              <p>No users found matching "{searchQuery}"</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredUsers.map((user) => (
+                            <tr key={user.id}>
+                              {editingUser?.id === user.id ? (
+                                <>
+                                  <td>
                                     <input
-                                      className="form-check-input"
-                                      type="checkbox"
-                                      checked={editFormData.is_active}
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      value={editFormData.first_name || ""}
                                       onChange={(e) =>
                                         setEditFormData({
                                           ...editFormData,
-                                          is_active: e.target.checked,
+                                          first_name: e.target.value,
                                         })
                                       }
                                     />
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <button
-                                      className="btn btn-sm btn-outline-success px-3"
-                                      onClick={handleEditSubmit}
-                                      disabled={saving}
-                                      style={{
-                                        minWidth: "80px",
-                                        fontWeight: "500",
-                                        transition: "all 0.2s ease",
-                                      }}
+                                  </td>
+                                  <td>
+                                    <input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      value={editFormData.last_name || ""}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          last_name: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      type="email"
+                                      className="form-control form-control-sm"
+                                      value={editFormData.email}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          email: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      value={editFormData.job_title}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          job_title: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </td>
+                                  <td>
+                                    <select
+                                      className="form-select form-select-sm"
+                                      value={editFormData.role}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          role: e.target.value as
+                                            | "user"
+                                            | "admin",
+                                        })
+                                      }
+                                      style={{ minWidth: "100px" }}
                                     >
-                                      {saving ? (
-                                        <>
-                                          <span
-                                            className="spinner-border spinner-border-sm me-1"
-                                            role="status"
-                                            aria-hidden="true"
-                                          ></span>
-                                          Saving...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <i className="bi bi-check-circle-fill me-1"></i>
-                                          Save
-                                        </>
-                                      )}
+                                      <option value="user">User</option>
+                                      <option value="admin">Admin</option>
+                                    </select>
+                                  </td>
+                                  <td>
+                                    <div className="form-check">
+                                      <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        checked={editFormData.is_active}
+                                        onChange={(e) =>
+                                          setEditFormData({
+                                            ...editFormData,
+                                            is_active: e.target.checked,
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className="d-flex gap-2">
+                                      <button
+                                        className="btn btn-sm btn-outline-success px-3"
+                                        onClick={handleEditSubmit}
+                                        disabled={saving}
+                                        style={{
+                                          minWidth: "80px",
+                                          fontWeight: "500",
+                                          transition: "all 0.2s ease",
+                                        }}
+                                      >
+                                        {saving ? (
+                                          <>
+                                            <span
+                                              className="spinner-border spinner-border-sm me-1"
+                                              role="status"
+                                              aria-hidden="true"
+                                            ></span>
+                                            Saving...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <i className="bi bi-check-circle-fill me-1"></i>
+                                            Save
+                                          </>
+                                        )}
+                                      </button>
+                                      <button
+                                        className="btn btn-sm btn-outline-secondary px-3"
+                                        onClick={() => setEditingUser(null)}
+                                        disabled={saving}
+                                        style={{
+                                          minWidth: "80px",
+                                          fontWeight: "500",
+                                          transition: "all 0.2s ease",
+                                        }}
+                                      >
+                                        <i className="bi bi-x-circle me-1"></i>
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td>{user.first_name}</td>
+                                  <td>{user.last_name}</td>
+                                  <td>{user.email}</td>
+                                  <td>{user.job_title || "-"}</td>
+                                  <td>
+                                    <span
+                                      className={`badge bg-${
+                                        user.role === "admin"
+                                          ? "primary"
+                                          : "secondary"
+                                      }`}
+                                    >
+                                      {user.role}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span
+                                      className={`badge bg-${
+                                        user.is_active ? "success" : "danger"
+                                      }`}
+                                    >
+                                      {user.is_active ? "Active" : "Inactive"}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="btn btn-sm btn-outline-primary me-1"
+                                      onClick={() => handleEditClick(user)}
+                                    >
+                                      <i className="bi bi-pencil-fill me-1"></i>
+                                      Edit
                                     </button>
                                     <button
-                                      className="btn btn-sm btn-outline-secondary px-3"
-                                      onClick={() => setEditingUser(null)}
-                                      disabled={saving}
-                                      style={{
-                                        minWidth: "80px",
-                                        fontWeight: "500",
-                                        transition: "all 0.2s ease",
-                                      }}
+                                      className="btn btn-sm btn-outline-danger"
+                                      onClick={() => handleDeleteUser(user.id)}
                                     >
-                                      <i className="bi bi-x-circle me-1"></i>
-                                      Cancel
+                                      <i className="bi bi-trash-fill me-1"></i>
+                                      Delete
                                     </button>
-                                  </div>
-                                </td>
-                              </>
-                            ) : (
-                              <>
-                                <td>{user.first_name}</td>
-                                <td>{user.last_name}</td>
-                                <td>{user.email}</td>
-                                <td>{user.job_title || "-"}</td>
-                                <td>
-                                  <span
-                                    className={`badge bg-${
-                                      user.role === "admin"
-                                        ? "primary"
-                                        : "secondary"
-                                    }`}
-                                  >
-                                    {user.role}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span
-                                    className={`badge bg-${
-                                      user.is_active ? "success" : "danger"
-                                    }`}
-                                  >
-                                    {user.is_active ? "Active" : "Inactive"}
-                                  </span>
-                                </td>
-                                <td>
-                                  <button
-                                    className="btn btn-sm btn-outline-primary me-1"
-                                    onClick={() => handleEditClick(user)}
-                                  >
-                                    <i className="bi bi-pencil-fill me-1"></i>
-                                    Edit
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleDeleteUser(user.id)}
-                                  >
-                                    <i className="bi bi-trash-fill me-1"></i>
-                                    Delete
-                                  </button>
-                                </td>
-                              </>
-                            )}
-                          </tr>
-                        ))}
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>

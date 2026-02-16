@@ -11,6 +11,15 @@ export function EnrolledCourseCard({
   course,
   onUnenroll,
 }: EnrolledCourseCardProps) {
+  // Format dates for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="col-md-6 mb-3">
       <div className="card h-100">
@@ -20,7 +29,8 @@ export function EnrolledCourseCard({
             <strong>Instructor:</strong> {course.instructor}
           </p>
           <p className="mb-1">
-            <strong>Duration:</strong> {course.duration}
+            <strong>Duration:</strong> {formatDate(course.start_date)} -{" "}
+            {formatDate(course.end_date)}
           </p>
           <p className="mb-2 text-muted">
             Enrolled: {new Date(course.enrollmentDate).toLocaleDateString()}

@@ -39,12 +39,17 @@ export function EditCourseModal({
     description: "",
     full_description: "",
     instructor: "",
-    duration: "",
+    start_date: "",
+    end_date: "",
     capacity: 0,
   });
 
   // Assignment form data
   const [selectedUserId, setSelectedUserId] = useState("");
+
+  // Search states
+  const [enrolledUsersSearch, setEnrolledUsersSearch] = useState("");
+  const [assignUserSearch, setAssignUserSearch] = useState("");
 
   // Populate form when course changes
   useEffect(() => {
@@ -54,7 +59,8 @@ export function EditCourseModal({
         description: course.description,
         full_description: course.full_description || "",
         instructor: course.instructor,
-        duration: course.duration,
+        start_date: course.start_date,
+        end_date: course.end_date,
         capacity: course.capacity,
       });
     }
@@ -210,6 +216,25 @@ export function EditCourseModal({
     (user) => !enrolledUsers.some((e) => e.user_id === user.id),
   );
 
+  // Filter enrolled users based on search
+  const filteredEnrolledUsers = enrolledUsers.filter((enrollment) => {
+    const searchLower = enrolledUsersSearch.toLowerCase();
+    return (
+      enrollment.user_name?.toLowerCase().includes(searchLower) ||
+      enrollment.user_email?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Filter available users for assignment based on search
+  const filteredAvailableUsers = availableUsers.filter((user) => {
+    const searchLower = assignUserSearch.toLowerCase();
+    return (
+      user.first_name.toLowerCase().includes(searchLower) ||
+      user.last_name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div
       className="modal fade show d-block"
@@ -326,36 +351,51 @@ export function EditCourseModal({
                       </div>
 
                       <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Duration</label>
+                        <label className="form-label fw-bold">Capacity</label>
                         <input
-                          type="text"
+                          type="number"
                           className="form-control"
-                          value={formData.duration}
+                          value={formData.capacity}
                           onChange={(e) =>
-                            handleChange("duration", e.target.value)
+                            handleChange("capacity", parseInt(e.target.value))
                           }
-                          placeholder="e.g., 8 weeks"
+                          min={course.enrolled}
                           required
                         />
+                        <small className="text-muted">
+                          Current enrollment: {course.enrolled}. Capacity cannot
+                          be less than current enrollment.
+                        </small>
                       </div>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Capacity</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={formData.capacity}
-                        onChange={(e) =>
-                          handleChange("capacity", parseInt(e.target.value))
-                        }
-                        min={course.enrolled}
-                        required
-                      />
-                      <small className="text-muted">
-                        Current enrollment: {course.enrolled}. Capacity cannot
-                        be less than current enrollment.
-                      </small>
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label fw-bold">Start Date</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={formData.start_date}
+                          onChange={(e) =>
+                            handleChange("start_date", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label fw-bold">End Date</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={formData.end_date}
+                          onChange={(e) =>
+                            handleChange("end_date", e.target.value)
+                          }
+                          min={formData.start_date}
+                          required
+                        />
+                      </div>
                     </div>
 
                     <div className="d-flex justify-content-between align-items-center gap-2">
@@ -425,38 +465,78 @@ export function EditCourseModal({
                       <p>No users enrolled in this course yet.</p>
                     </div>
                   ) : (
-                    <div className="list-group">
-                      {enrolledUsers.map((enrollment) => (
-                        <div
-                          key={enrollment.id}
-                          className="list-group-item d-flex justify-content-between align-items-center"
-                        >
-                          <div>
-                            <h6 className="mb-1">{enrollment.user_name}</h6>
-                            <small className="text-muted">
-                              {enrollment.user_email}
-                            </small>
-                            <br />
-                            <small className="text-muted">
-                              Enrolled:{" "}
-                              {new Date(
-                                enrollment.enrolled_at,
-                              ).toLocaleDateString()}
-                            </small>
-                          </div>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() =>
-                              handleUnassignUser(enrollment.user_id)
+                    <>
+                      <div className="mb-3">
+                        <div className="input-group">
+                          <span className="input-group-text">
+                            <i className="bi bi-search"></i>
+                          </span>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by name or email..."
+                            value={enrolledUsersSearch}
+                            onChange={(e) =>
+                              setEnrolledUsersSearch(e.target.value)
                             }
-                            disabled={loading}
-                          >
-                            <i className="bi bi-x-circle me-1"></i>
-                            Unassign
-                          </button>
+                          />
+                          {enrolledUsersSearch && (
+                            <button
+                              className="btn btn-outline-secondary"
+                              type="button"
+                              onClick={() => setEnrolledUsersSearch("")}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          )}
                         </div>
-                      ))}
-                    </div>
+                        <small className="text-muted">
+                          Showing {filteredEnrolledUsers.length} of{" "}
+                          {enrolledUsers.length} enrolled user(s)
+                        </small>
+                      </div>
+                      <div className="list-group">
+                        {filteredEnrolledUsers.map((enrollment) => (
+                          <div
+                            key={enrollment.id}
+                            className="list-group-item d-flex justify-content-between align-items-center"
+                          >
+                            <div>
+                              <h6 className="mb-1">{enrollment.user_name}</h6>
+                              <small className="text-muted">
+                                {enrollment.user_email}
+                              </small>
+                              <br />
+                              <small className="text-muted">
+                                Enrolled:{" "}
+                                {new Date(
+                                  enrollment.enrolled_at,
+                                ).toLocaleDateString()}
+                              </small>
+                            </div>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() =>
+                                handleUnassignUser(enrollment.user_id)
+                              }
+                              disabled={loading}
+                            >
+                              <i className="bi bi-x-circle me-1"></i>
+                              Unassign
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      {filteredEnrolledUsers.length === 0 &&
+                        enrolledUsersSearch && (
+                          <div className="text-center py-3 text-muted">
+                            <i className="bi bi-search fs-3 d-block mb-2"></i>
+                            <p>
+                              No users found matching "{enrolledUsersSearch}"
+                            </p>
+                          </div>
+                        )}
+                    </>
                   )}
                 </div>
               )}
@@ -472,8 +552,31 @@ export function EditCourseModal({
                     <form onSubmit={handleAssignUser}>
                       <div className="mb-3">
                         <label className="form-label fw-bold">
-                          Select User to Assign
+                          Search and Select User to Assign
                         </label>
+                        <div className="input-group mb-2">
+                          <span className="input-group-text">
+                            <i className="bi bi-search"></i>
+                          </span>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by name or email..."
+                            value={assignUserSearch}
+                            onChange={(e) =>
+                              setAssignUserSearch(e.target.value)
+                            }
+                          />
+                          {assignUserSearch && (
+                            <button
+                              className="btn btn-outline-secondary"
+                              type="button"
+                              onClick={() => setAssignUserSearch("")}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          )}
+                        </div>
                         <select
                           className="form-select"
                           value={selectedUserId}
@@ -481,14 +584,26 @@ export function EditCourseModal({
                           required
                         >
                           <option value="">Choose a user...</option>
-                          {availableUsers.map((user) => (
+                          {filteredAvailableUsers.map((user) => (
                             <option key={user.id} value={user.id}>
                               {user.first_name} {user.last_name} ({user.email})
                               - {user.role}
                             </option>
                           ))}
                         </select>
+                        <small className="text-muted">
+                          Showing {filteredAvailableUsers.length} of{" "}
+                          {availableUsers.length} available user(s)
+                        </small>
                       </div>
+
+                      {filteredAvailableUsers.length === 0 &&
+                        assignUserSearch && (
+                          <div className="alert alert-info">
+                            <i className="bi bi-info-circle me-2"></i>
+                            No users found matching "{assignUserSearch}"
+                          </div>
+                        )}
 
                       <div className="alert alert-info">
                         <i className="bi bi-info-circle me-2"></i>
@@ -520,7 +635,10 @@ export function EditCourseModal({
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => setSelectedUserId("")}
+                          onClick={() => {
+                            setSelectedUserId("");
+                            setAssignUserSearch("");
+                          }}
                         >
                           Clear
                         </button>

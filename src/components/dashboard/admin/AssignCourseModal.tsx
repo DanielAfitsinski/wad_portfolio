@@ -27,6 +27,7 @@ export function AssignCourseModal({
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [userSearch, setUserSearch] = useState("");
 
   // Load users and courses when modal opens
   useEffect(() => {
@@ -102,10 +103,21 @@ export function AssignCourseModal({
     });
     setError("");
     setSuccess("");
+    setUserSearch("");
     onClose();
   };
 
   if (!show) return null;
+
+  // Filter users based on search
+  const filteredUsers = users.filter((user) => {
+    const searchLower = userSearch.toLowerCase();
+    return (
+      user.first_name.toLowerCase().includes(searchLower) ||
+      user.last_name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div
@@ -149,6 +161,27 @@ export function AssignCourseModal({
                     <label htmlFor="selectUser" className="form-label">
                       Select User
                     </label>
+                    <div className="input-group mb-2">
+                      <span className="input-group-text">
+                        <i className="bi bi-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Search by name or email..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                      />
+                      {userSearch && (
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setUserSearch("")}
+                        >
+                          <i className="bi bi-x"></i>
+                        </button>
+                      )}
+                    </div>
                     <select
                       className="form-select"
                       id="selectUser"
@@ -160,14 +193,24 @@ export function AssignCourseModal({
                       disabled={loading}
                     >
                       <option value="">Choose a user...</option>
-                      {users.map((user) => (
+                      {filteredUsers.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.first_name} {user.last_name} ({user.email}) -{" "}
                           {user.role}
                         </option>
                       ))}
                     </select>
+                    <small className="text-muted">
+                      Showing {filteredUsers.length} of {users.length} user(s)
+                    </small>
                   </div>
+
+                  {filteredUsers.length === 0 && userSearch && (
+                    <div className="alert alert-info mb-3">
+                      <i className="bi bi-info-circle me-2"></i>
+                      No users found matching "{userSearch}"
+                    </div>
+                  )}
 
                   <div className="mb-3">
                     <label htmlFor="selectCourse" className="form-label">

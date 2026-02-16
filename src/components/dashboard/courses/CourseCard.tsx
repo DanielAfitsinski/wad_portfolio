@@ -23,6 +23,15 @@ export function CourseCard({
   const isFull = course.enrolled >= course.capacity;
   const percent = Math.round((course.enrolled / course.capacity) * 100);
 
+  // Format dates for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="col-md-6 col-lg-4 mb-3">
       <div className="card h-100">
@@ -39,7 +48,8 @@ export function CourseCard({
               <strong>Instructor:</strong> {course.instructor}
             </p>
             <p className="mb-0">
-              <strong>Duration:</strong> {course.duration}
+              <strong>Duration:</strong> {formatDate(course.start_date)} -{" "}
+              {formatDate(course.end_date)}
             </p>
           </div>
 

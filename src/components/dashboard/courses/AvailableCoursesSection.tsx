@@ -1,3 +1,5 @@
+// Section component for displaying all available courses for enrollment
+
 import type { Course } from "../../../types";
 import { CourseCard } from "./CourseCard";
 

@@ -1,6 +1,9 @@
 <?php
+// Authentication middleware for verifying user tokens
+
 require_once __DIR__ . '/../config/database.php';
-// Token authentication
+
+// Verify authentication token from cookie
 function verifyAuthToken() {
     $token = $_COOKIE['authToken'] ?? null;
     
@@ -13,6 +16,7 @@ function verifyAuthToken() {
     try {
         $db = Database::getInstance();
         
+        // Check if token is valid and not expired
         $user = $db->queryOne("
             SELECT u.id, u.email, u.first_name, u.last_name, u.role 
             FROM auth_tokens at
@@ -34,6 +38,7 @@ function verifyAuthToken() {
     }
 }
 
+// Verify user has admin role
 function requireAdminToken() {
     $user = verifyAuthToken();
     

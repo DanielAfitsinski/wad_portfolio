@@ -1,3 +1,5 @@
+// Section component for displaying all enrolled courses
+
 import type { EnrolledCourse } from "../../../types";
 import { EnrolledCourseCard } from "./EnrolledCourseCard";
 

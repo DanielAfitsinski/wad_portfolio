@@ -1,3 +1,5 @@
+// Modal component for creating a new user account
+
 import { useState } from "react";
 import { adminService } from "../../../services/adminService";
 import type { CreateUserData, ApiError } from "../../../types";
@@ -13,6 +15,7 @@ export function AddUserModal({
   onClose,
   onUserAdded,
 }: AddUserModalProps) {
+  // State management for form and UI
   const [formData, setFormData] = useState<CreateUserData>({
     first_name: "",
     last_name: "",
@@ -26,6 +29,7 @@ export function AddUserModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -51,6 +55,7 @@ export function AddUserModal({
     }
   };
 
+  // Reset form and close modal
   const handleClose = () => {
     setFormData({
       first_name: "",

@@ -1,3 +1,5 @@
+// Main dashboard component for course management and enrollment
+
 import { useState, useEffect } from "react";
 import type { User, Course, EnrolledCourse, ApiError } from "../../types";
 import { authService } from "../../services/authService";
@@ -8,12 +10,14 @@ import { EditCourseModal } from "./admin/EditCourseModal";
 import { Navbar } from "./Navbar";
 
 export function Dashboard() {
+  // State management for user and courses
   const [user, setUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
+  // Load user data and courses on component mount
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -35,6 +39,7 @@ export function Dashboard() {
     loadUser();
   }, []);
 
+  // Handle course enrollment
   const handleEnroll = async (courseId: number) => {
     if (!user) return;
     try {
@@ -55,6 +60,7 @@ export function Dashboard() {
     }
   };
 
+  // Handle course unenrollment
   const handleUnenroll = async (enrollmentId: number) => {
     try {
       await courseService.removeEnrollment(enrollmentId);
@@ -74,6 +80,7 @@ export function Dashboard() {
     }
   };
 
+  // Refresh all course data
   const refreshData = async () => {
     if (!user) return;
     try {
@@ -88,19 +95,23 @@ export function Dashboard() {
     }
   };
 
+  // Open course edit modal
   const handleEditCourse = (course: Course) => {
     setEditingCourse(course);
   };
 
+  // Close course edit modal
   const handleCloseEditModal = () => {
     setEditingCourse(null);
   };
 
+  // Handle successful course update
   const handleCourseUpdated = async () => {
     await refreshData();
     setEditingCourse(null);
   };
 
+  // Handle user logout
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -110,6 +121,7 @@ export function Dashboard() {
     window.location.href = "/";
   };
 
+  // Show loading spinner while fetching data
   if (loading || !user) {
     return (
       <div className="container text-center mt-5">
@@ -120,6 +132,7 @@ export function Dashboard() {
     );
   }
 
+  // Create set of enrolled course IDs for quick lookup
   const enrolledCourseIds = new Set(enrolledCourses.map((c) => c.id));
 
   return (

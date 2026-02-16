@@ -1,13 +1,17 @@
 <?php
+// Authentication controller for user login, registration, and session management
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../common/cors.php';
 
 class AuthController {
     
+    // Get database instance
     private static function getDB() {
         return Database::getInstance();
     }
 
+    // Handle user login with email and password
     public static function login() {
         setCorsHeaders(['POST']);
         validateMethod('POST');
@@ -23,13 +27,14 @@ class AuthController {
         $email = $input['email'];
         $password = $input['password'];
 
+        // Define lockout parameters
         define('MAX_ATTEMPTS', 3);
         define('LOCKOUT_DURATION_MINUTES', 5);
 
         try{
             $db = self::getDB();
 
-            // Check account lockout
+            // Check account lockout status
             $result = $db->queryOne("
                 SELECT COUNT(*) as failed_attempts
                 FROM login_attempts
@@ -39,6 +44,7 @@ class AuthController {
             ", [$email, LOCKOUT_DURATION_MINUTES]);
             $failedAttempts = $result['failed_attempts'] ?? 0;
 
+            // Enforce account lockout if too many failed attempts
             if($failedAttempts >= MAX_ATTEMPTS){
                 $oldestAttempt = $db->queryOne("
                     SELECT MIN(attempted_at) as oldest_attempt
@@ -63,12 +69,13 @@ class AuthController {
                 exit();
             }
 
-            // Fetch user
+            // Fetch user from database
             $user = $db->queryOne(
                 "SELECT id, email, password_hash, first_name, last_name, job_title, role, is_active FROM users WHERE email = ?",
                 [$email]
             );
 
+            // Verify password and user exists
             if(!$user || !password_verify($password, $user['password_hash'])){
                 $db->execute(
                     "INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, FALSE)",
@@ -80,29 +87,35 @@ class AuthController {
                 exit();
             }
 
+            // Check if account is active
             if(!$user['is_active']){
                 http_response_code(403);
                 echo json_encode(['error' => 'Forbidden: Account is inactive']);
                 exit();
             }
 
+            // Generate authentication token
             $token = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
+            // Store token in database
             $db->execute(
                 "INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
                 [$user['id'], $token, $expiresAt]
             );
 
+            // Record successful login attempt
             $db->execute("INSERT INTO login_attempts (user_id, email, success) VALUES (?, ?, TRUE)", [$user['id'], $email]);
 
+            // Update last login timestamp
             $db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
 
+            // Set authentication cookie
             setcookie('authToken', $token, [
                 'expires' => strtotime('+1 hour'),
                 'path' => '/',
                 'domain' => '',
-                'secure' => false,
+                'secure' => $_SERVER['HTTPS'] ?? false,
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
@@ -125,6 +138,8 @@ class AuthController {
             echo json_encode(['error' => 'Internal Server Error']);
         }
     }
+    
+    // Handle user registration
     public static function register() {
         setCorsHeaders(['POST']);
         
@@ -499,7 +514,7 @@ class AuthController {
                 'expires' => strtotime('+1 hour'),
                 'path' => '/',
                 'domain' => '',
-                'secure' => false,
+                'secure' => $_SERVER['HTTPS'] ?? false,
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);

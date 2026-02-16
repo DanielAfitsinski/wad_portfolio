@@ -1,7 +1,10 @@
+// Forgot password component for requesting password reset
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function ForgotPassword() {
+  // State management for form and UI
   const [email, setEmail] = useState("");
   const [uiState, setUiState] = useState({
     emailError: "",
@@ -11,6 +14,7 @@ export function ForgotPassword() {
   });
   const navigate = useNavigate();
 
+  // Validate email format
   const validateEmail = (value: string): string => {
     if (!value.trim()) {
       return "Email is required";
@@ -23,6 +27,7 @@ export function ForgotPassword() {
     return "";
   };
 
+  // Handle email input changes
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
@@ -30,6 +35,7 @@ export function ForgotPassword() {
     setUiState((prev) => ({ ...prev, emailError: validateEmail(value) }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUiState((prev) => ({ ...prev, error: "", success: "" }));

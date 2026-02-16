@@ -1,3 +1,5 @@
+// Modal component for editing course details and managing user assignments
+
 import { useState, useEffect } from "react";
 import type {
   Course,
@@ -23,6 +25,7 @@ export function EditCourseModal({
   onClose,
   onUpdate,
 }: EditCourseModalProps) {
+  // State management for tabs and data
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [loading, setLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -30,7 +33,7 @@ export function EditCourseModal({
     [],
   );
 
-  // Course form
+  // Course form data
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -40,9 +43,10 @@ export function EditCourseModal({
     capacity: 0,
   });
 
-  // Assignment form
+  // Assignment form data
   const [selectedUserId, setSelectedUserId] = useState("");
 
+  // Populate form when course changes
   useEffect(() => {
     if (course) {
       setFormData({
@@ -56,12 +60,14 @@ export function EditCourseModal({
     }
   }, [course]);
 
+  // Load users and assignments when modal opens
   useEffect(() => {
     if (show && course) {
       loadData();
     }
   }, [show, course]);
 
+  // Load all users and course assignments
   const loadData = async () => {
     if (!course) return;
 
@@ -94,6 +100,7 @@ export function EditCourseModal({
     }
   };
 
+  // Handle form field changes
   const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

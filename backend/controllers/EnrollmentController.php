@@ -1,14 +1,18 @@
 <?php
+// Enrollment controller for managing course enrollments and unenrollments
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/../common/cors.php';
 
 class EnrollmentController {
     
+    // Get database instance
     private static function getDB() {
         return Database::getInstance();
     }
     
+    // Enroll user in a course
     public static function enroll() {
         setCorsHeaders(['POST']);
         
@@ -16,6 +20,7 @@ class EnrollmentController {
 
         $input = json_decode(file_get_contents('php://input'), true);
 
+        // Validate required fields
         if(!isset($input['user_id']) || !isset($input['course_id'])){
             http_response_code(400);
             echo json_encode(['error' => 'Bad Request: user_id and course_id required']);
@@ -28,7 +33,7 @@ class EnrollmentController {
         try {
             $db = self::getDB();
 
-            // Check existing enrollment
+            // Check if user is already enrolled
             $existingEnrollment = $db->queryOne(
                 "SELECT id FROM course_enrollments WHERE user_id = ? AND course_id = ?",
                 [$userId, $courseId]
@@ -40,7 +45,7 @@ class EnrollmentController {
                 exit();
             }
 
-            // Fetch course details
+            // Fetch course details with current enrollment count
             $courseData = $db->queryOne("
                 SELECT c.id, c.title, c.instructor, c.duration, c.capacity, COUNT(ce.id) AS enrolled
                 FROM courses c
@@ -55,6 +60,7 @@ class EnrollmentController {
                 exit();
             }
 
+            // Check if course is at capacity
             if($courseData['enrolled'] >= $courseData['capacity']){
                 http_response_code(409);
                 echo json_encode(['error' => 'Course is full']);
@@ -70,7 +76,7 @@ class EnrollmentController {
                 exit();
             }
 
-            // Create enrollment
+            // Create enrollment record
             $db->execute("
                 INSERT INTO course_enrollments (user_id, course_id, enrolled_at)
                 VALUES (?, ?, NOW())
@@ -79,7 +85,7 @@ class EnrollmentController {
             $enrollmentId = $db->lastInsertId();
             $enrollmentDate = date('Y-m-d H:i:s');
 
-            // Send confirmation email
+            // Send confirmation email to user
             try {
                 sendCourseEnrollmentConfirmationEmail(
                     $userData['email'],

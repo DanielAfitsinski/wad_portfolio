@@ -1,3 +1,5 @@
+// Modal component for assigning users to courses
+
 import { useState, useEffect } from "react";
 import { adminService } from "../../../services/adminService";
 import { courseService } from "../../../services/courseService";
@@ -14,6 +16,7 @@ export function AssignCourseModal({
   onClose,
   onAssigned,
 }: AssignCourseModalProps) {
+  // State management for users, courses, and form
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formData, setFormData] = useState({
@@ -25,12 +28,14 @@ export function AssignCourseModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Load users and courses when modal opens
   useEffect(() => {
     if (show) {
       loadData();
     }
   }, [show]);
 
+  // Fetch users and courses from API
   const loadData = async () => {
     setLoadingData(true);
     try {
@@ -47,10 +52,12 @@ export function AssignCourseModal({
     }
   };
 
+  // Handle form field changes
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Handle assignment form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -87,6 +94,7 @@ export function AssignCourseModal({
     }
   };
 
+  // Reset form and close modal
   const handleClose = () => {
     setFormData({
       selectedUserId: "",

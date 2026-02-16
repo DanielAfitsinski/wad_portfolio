@@ -1,3 +1,5 @@
+// Modal component for managing users - view, edit, and delete
+
 import { useState, useEffect } from "react";
 import { adminService } from "../../../services/adminService";
 import type { User, UpdateUserData, ApiError } from "../../../types";
@@ -14,6 +16,7 @@ export function ManageUsersModal({
   onClose,
   onRefresh,
 }: ManageUsersModalProps) {
+  // State management for users list and editing
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,12 +33,14 @@ export function ManageUsersModal({
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Load users when modal opens
   useEffect(() => {
     if (show) {
       loadUsers();
     }
   }, [show]);
 
+  // Fetch all users from API
   const loadUsers = async () => {
     setLoading(true);
     setError("");
@@ -50,6 +55,7 @@ export function ManageUsersModal({
     }
   };
 
+  // Set user data for editing
   const handleEditClick = (user: User) => {
     setEditingUser(user);
     setEditFormData({
@@ -63,6 +69,7 @@ export function ManageUsersModal({
     });
   };
 
+  // Submit user edit form
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -80,6 +87,7 @@ export function ManageUsersModal({
     }
   };
 
+  // Delete user with confirmation
   const handleDeleteUser = async (userId: number) => {
     if (!confirm("Are you sure you want to delete this user?")) {
       return;
@@ -96,6 +104,7 @@ export function ManageUsersModal({
     }
   };
 
+  // Handle user addition completion
   const handleUserAdded = () => {
     setShowAddUserModal(false);
     loadUsers();

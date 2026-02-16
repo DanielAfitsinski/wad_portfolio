@@ -1,4 +1,6 @@
 <?php
+// User management endpoint - admin only CRUD operations for users
+
 require_once __DIR__ . '/../../common/cors.php';
 require_once __DIR__ . '/../../common/auth.php';
 require_once __DIR__ . '/../../controllers/UserController.php';
@@ -6,26 +8,27 @@ require_once __DIR__ . '/../../controllers/UserController.php';
 // Set CORS headers
 setCorsHeaders(['GET', 'POST', 'PUT', 'DELETE']);
 
-// Verify admin
+// Verify admin privileges
 $user = requireAdminToken();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $controller = new UserController();
 
+// Route request to appropriate controller method
 switch ($method) {
     case 'GET':
-        // Get users
+        // Get all users
         echo $controller->getAllUsers();
         break;
         
     case 'POST':
-        // Create user
+        // Create new user
         $data = json_decode(file_get_contents('php://input'), true);
         echo $controller->createUser($data);
         break;
         
     case 'PUT':
-        // Update user
+        // Update existing user
         $data = json_decode(file_get_contents('php://input'), true);
         echo $controller->updateUser($data);
         break;

@@ -1,14 +1,17 @@
 <?php
+// Course controller for managing courses and course operations
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../common/cors.php';
 
 class CourseController {
     
+    // Get database instance
     private static function getDB() {
         return Database::getInstance();
     }
     
+    // Get all courses with enrollment counts
     public static function getCourses() {
         setCorsHeaders(['GET']);
         
@@ -45,6 +48,7 @@ class CourseController {
         }
     }
 
+    // Create new course
     public static function createCourse() {
         setCorsHeaders(['POST']);
         validateMethod('POST');
@@ -52,6 +56,7 @@ class CourseController {
         try {
             $data = json_decode(file_get_contents('php://input'), true);
 
+            // Validate required fields
             if (!isset($data['title']) || !isset($data['description']) || 
                 !isset($data['instructor']) || !isset($data['duration']) || 
                 !isset($data['capacity'])) {
@@ -60,7 +65,7 @@ class CourseController {
                 return;
             }
 
-            // Validate fields
+            // Validate and sanitize field values
             $title = trim($data['title']);
             $description = trim($data['description']);
             $instructor = trim($data['instructor']);
@@ -99,11 +104,13 @@ class CourseController {
 
             $db = self::getDB();
 
+            // Handle optional full description
             $fullDescription = isset($data['full_description']) ? trim($data['full_description']) : null;
             if ($fullDescription === '') {
                 $fullDescription = null;
             }
 
+            // Insert new course into database
             $db->execute("
                 INSERT INTO courses (title, description, full_description, instructor, duration, capacity)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -122,6 +129,7 @@ class CourseController {
         }
     }
 
+    // Update existing course
     public static function updateCourse() {
         setCorsHeaders(['PUT']);
         validateMethod('PUT');
@@ -137,10 +145,11 @@ class CourseController {
 
             $db = self::getDB();
 
-            // Build update query
+            // Build dynamic update query based on provided fields
             $fields = [];
             $params = [];
 
+            // Update title if provided
             if (isset($data['title'])) {
                 $title = trim($data['title']);
                 if (empty($title)) {
@@ -151,6 +160,8 @@ class CourseController {
                 $fields[] = 'title = ?';
                 $params[] = $title;
             }
+            
+            // Update description if provided
             if (isset($data['description'])) {
                 $description = trim($data['description']);
                 if (empty($description)) {
@@ -161,11 +172,15 @@ class CourseController {
                 $fields[] = 'description = ?';
                 $params[] = $description;
             }
+            
+            // Update full description if provided
             if (isset($data['full_description'])) {
                 $fullDescription = trim($data['full_description']);
                 $fields[] = 'full_description = ?';
                 $params[] = $fullDescription ?: null;
             }
+            
+            // Update instructor if provided
             if (isset($data['instructor'])) {
                 $instructor = trim($data['instructor']);
                 if (empty($instructor)) {
@@ -176,6 +191,8 @@ class CourseController {
                 $fields[] = 'instructor = ?';
                 $params[] = $instructor;
             }
+            
+            // Update duration if provided
             if (isset($data['duration'])) {
                 $duration = trim($data['duration']);
                 if (empty($duration)) {
@@ -186,6 +203,8 @@ class CourseController {
                 $fields[] = 'duration = ?';
                 $params[] = $duration;
             }
+            
+            // Update capacity if provided and validate against current enrollment
             if (isset($data['capacity'])) {
                 $capacity = (int)$data['capacity'];
                 
@@ -195,7 +214,7 @@ class CourseController {
                     return;
                 }
 
-                // Validate capacity
+                // Validate capacity against current enrollment count
                 $enrollmentCheck = $db->queryOne("
                     SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = ?
                 ", [$data['id']]);
@@ -217,6 +236,7 @@ class CourseController {
                 return;
             }
 
+            // Build and execute UPDATE query
             // Add id to params for WHERE clause
             $params[] = $data['id'];
             $sql = "UPDATE courses SET " . implode(', ', $fields) . " WHERE id = ?";
@@ -234,6 +254,7 @@ class CourseController {
         }
     }
 
+    // Delete course if no enrollments exist
     public static function deleteCourse() {
         setCorsHeaders(['DELETE']);
         validateMethod('DELETE');
@@ -249,7 +270,7 @@ class CourseController {
 
             $db = self::getDB();
 
-            // Check enrollments
+            // Check if course has any enrollments
             $enrollmentCheck = $db->queryOne("
                 SELECT COUNT(*) as enrolled FROM course_enrollments WHERE course_id = ?
             ", [$data['id']]);

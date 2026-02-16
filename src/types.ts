@@ -1,3 +1,6 @@
+// Application type definitions and interfaces
+
+// User type for authentication and user management
 export interface User {
   id: number;
   first_name: string;
@@ -8,6 +11,7 @@ export interface User {
   is_active?: boolean;
 }
 
+// Course type for course listings
 export interface Course {
   id: number;
   title: string;
@@ -19,6 +23,7 @@ export interface Course {
   capacity: number;
 }
 
+// Course enrollment relationship
 export interface CourseEnrollment {
   id: number;
   user_id: number;
@@ -26,11 +31,13 @@ export interface CourseEnrollment {
   enrolled_at: string;
 }
 
+// Extended course type with enrollment details
 export interface EnrolledCourse extends Course {
   enrollmentDate: string;
   enrollmentId: number;
 }
 
+// Generic API response wrapper
 export interface ApiResponse<T> {
   success?: boolean;
   message?: string;
@@ -60,6 +67,7 @@ export interface UpdateUserData {
   is_active?: boolean;
 }
 
+// User-course assignment type
 export interface UserCourseAssignment {
   id: number;
   user_id: number;

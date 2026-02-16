@@ -1,3 +1,5 @@
+// Modal component for creating a new course
+
 import { useState } from "react";
 import { courseService } from "../../../services/courseService";
 import type { ApiError, CreateCourseData } from "../../../types";
@@ -8,6 +10,7 @@ interface AddCourseModalProps {
   onCourseAdded?: () => void;
 }
 
+// Initial form values
 const initialFormData: CreateCourseData = {
   title: "",
   description: "",
@@ -22,9 +25,11 @@ export function AddCourseModal({
   onClose,
   onCourseAdded,
 }: AddCourseModalProps) {
+  // State management for form and loading
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateCourseData>(initialFormData);
 
+  // Handle form field changes
   const handleChange = (
     field: keyof CreateCourseData,
     value: string | number,
@@ -32,6 +37,7 @@ export function AddCourseModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

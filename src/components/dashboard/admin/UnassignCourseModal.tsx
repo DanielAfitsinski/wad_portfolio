@@ -1,3 +1,5 @@
+// Modal component for unassigning users from courses
+
 import { useState, useEffect } from "react";
 import { adminService } from "../../../services/adminService";
 import type { UserCourseAssignment, ApiError } from "../../../types";
@@ -8,6 +10,7 @@ interface UnassignCourseModalProps {
   onUnassigned: () => void;
 }
 
+// User grouped with their course assignments
 interface UserWithCourses {
   user_id: number;
   user_name: string;
@@ -20,6 +23,7 @@ export function UnassignCourseModal({
   onClose,
   onUnassigned,
 }: UnassignCourseModalProps) {
+  // State management for assignments and form
   const [assignments, setAssignments] = useState<UserCourseAssignment[]>([]);
   const [formData, setFormData] = useState({
     selectedUserId: "",
@@ -32,12 +36,14 @@ export function UnassignCourseModal({
     success: "",
   });
 
+  // Load assignments when modal opens
   useEffect(() => {
     if (show) {
       loadAssignments();
     }
   }, [show]);
 
+  // Fetch all course assignments
   const loadAssignments = async () => {
     setUiState((prev) => ({ ...prev, loadingData: true }));
     try {
@@ -53,6 +59,7 @@ export function UnassignCourseModal({
     }
   };
 
+  // Group assignments by user
   const usersWithCourses: UserWithCourses[] = Array.from(
     assignments
       .reduce((map, assignment) => {
@@ -71,10 +78,12 @@ export function UnassignCourseModal({
       .values(),
   );
 
+  // Get selected user's details
   const selectedUser = usersWithCourses.find(
     (u) => u.user_id.toString() === formData.selectedUserId,
   );
 
+  // Toggle course selection
   const toggleCourse = (courseId: number) => {
     setFormData((prev) => {
       const newSelected = new Set(prev.selectedCourseIds);
@@ -87,6 +96,7 @@ export function UnassignCourseModal({
     });
   };
 
+  // Toggle all courses for selected user
   const toggleAll = () => {
     if (!selectedUser) return;
 

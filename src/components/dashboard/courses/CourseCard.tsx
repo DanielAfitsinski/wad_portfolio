@@ -1,3 +1,5 @@
+// Course card component for displaying individual course details with enroll/edit actions
+
 import { useState } from "react";
 import type { Course } from "../../../types";
 
@@ -16,6 +18,7 @@ export function CourseCard({
   onEnroll,
   onEdit,
 }: CourseCardProps) {
+  // State for expanding/collapsing full description
   const [isExpanded, setIsExpanded] = useState(false);
   const isFull = course.enrolled >= course.capacity;
   const percent = Math.round((course.enrolled / course.capacity) * 100);

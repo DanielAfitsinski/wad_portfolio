@@ -1,15 +1,18 @@
+// Authentication service for user login, registration, and session management
+
 import axiosInstance from "./axiosInstance";
 import type { User, ApiResponse } from "../types";
 
 export const authService = {
-  // Verify auth
+  // Verify user authentication status
   async verifyAuth(): Promise<User> {
     const response = await axiosInstance.get<ApiResponse<User>>(
       "/login/verify-auth.php",
     );
     return response.data.user!;
   },
-  // Login
+
+  // Authenticate user with email and password
   async login(email: string, password: string) {
     const response = await axiosInstance.post("/login/login.php", {
       email,
@@ -18,6 +21,7 @@ export const authService = {
     return response.data;
   },
 
+  // Authenticate user with Google OAuth token
   async googleLogin(accessToken: string) {
     const response = await axiosInstance.post("/login/google-login.php", {
       token: accessToken,
@@ -25,7 +29,7 @@ export const authService = {
     return response.data;
   },
 
-  // Register
+  // Register new user account
   async register(name: string, email: string, password: string) {
     const response = await axiosInstance.post("/login/register.php", {
       name,
@@ -34,7 +38,8 @@ export const authService = {
     });
     return response.data;
   },
-  // Logout
+
+  // End user session
   async logout() {
     const response = await axiosInstance.post("/login/logout.php", {});
     return response.data;

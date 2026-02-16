@@ -1,3 +1,5 @@
+// Navigation bar component with admin panel access and logout
+
 import { useState } from "react";
 import type { User } from "../../types";
 import { AdminPanel } from "./admin/AdminPanel";
@@ -9,7 +11,9 @@ interface NavbarProps {
 }
 
 export function Navbar({ user, onLogout, onRefresh }: NavbarProps) {
+  // State for admin panel visibility
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">

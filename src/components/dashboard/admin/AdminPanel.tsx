@@ -1,3 +1,5 @@
+// Admin panel modal providing access to user and course management features
+
 import { useState } from "react";
 import { AddUserModal } from "./AddUserModal";
 import { AddCourseModal } from "./AddCourseModal";
@@ -10,25 +12,30 @@ interface AdminPanelProps {
 }
 
 export function AdminPanel({ show, onClose, onRefresh }: AdminPanelProps) {
+  // State for managing nested modal visibility
   const [modals, setModals] = useState({
     addUser: false,
     addCourse: false,
     manageUsers: false,
   });
 
+  // Open specific modal
   const openModal = (modal: keyof typeof modals) => {
     setModals((prev) => ({ ...prev, [modal]: true }));
   };
 
+  // Close specific modal
   const closeModal = (modal: keyof typeof modals) => {
     setModals((prev) => ({ ...prev, [modal]: false }));
   };
 
+  // Handle user creation completion
   const handleUserAdded = () => {
     closeModal("addUser");
     onRefresh?.();
   };
 
+  // Handle course creation completion
   const handleCourseAdded = () => {
     closeModal("addCourse");
     onRefresh?.();

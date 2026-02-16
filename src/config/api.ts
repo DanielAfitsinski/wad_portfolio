@@ -1,5 +1,16 @@
-const API_BASE_URL = "http://localhost:8000/backend/api";
+// API configuration and endpoint definitions
 
+// Determine if running in production or development environment
+const isProduction = window.location.hostname.includes(
+  "ws411479-wad.remote.ac",
+);
+
+// Set base API URL based on environment
+const API_BASE_URL = isProduction
+  ? `${window.location.protocol}//${window.location.hostname}/backend/api`
+  : "http://localhost:8000/backend/api";
+
+// Centralized API endpoint definitions
 export const API_ENDPOINTS = {
   // Authentication
   auth: {

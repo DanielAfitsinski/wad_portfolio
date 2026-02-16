@@ -1,4 +1,6 @@
 <?php
+// User-course assignment management endpoint - admin only operations
+
 require_once __DIR__ . '/../common/cors.php';
 require_once __DIR__ . '/../common/auth.php';
 require_once __DIR__ . '/../controllers/UserController.php';
@@ -6,15 +8,16 @@ require_once __DIR__ . '/../controllers/UserController.php';
 // Set CORS headers
 setCorsHeaders(['GET', 'POST', 'DELETE']);
 
-// Verify admin
+// Verify admin privileges
 $user = requireAdminToken();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $controller = new UserController();
 
+// Route request to appropriate controller method
 switch ($method) {
     case 'GET':
-        // Get user courses
+        // Get user-course assignments
         $userId = $_GET['user_id'] ?? null;
         if ($userId) {
             echo $controller->getUserCourses($userId);
@@ -24,13 +27,13 @@ switch ($method) {
         break;
         
     case 'POST':
-        // Assign course
+        // Assign user to course
         $data = json_decode(file_get_contents('php://input'), true);
         echo $controller->assignUserToCourse($data);
         break;
         
     case 'DELETE':
-        // Remove course
+        // Remove user from course
         $data = json_decode(file_get_contents('php://input'), true);
         echo $controller->removeUserFromCourse($data);
         break;

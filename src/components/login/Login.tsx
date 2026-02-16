@@ -1,3 +1,5 @@
+// Login component with email/password and Google OAuth authentication
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -5,6 +7,7 @@ import { authService } from "../../services/authService";
 import type { ApiError } from "../../types";
 
 export function Login() {
+  // Form state management
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -14,10 +17,12 @@ export function Login() {
   const [lockTimeRemaining, setLockTimeRemaining] = useState(0);
   const navigate = useNavigate();
 
+  // Handle form field changes
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Handle traditional login form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -43,6 +48,7 @@ export function Login() {
     }
   };
 
+  // Configure Google OAuth login
   const googleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
       try {

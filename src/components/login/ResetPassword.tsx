@@ -1,8 +1,13 @@
+// Password reset component for setting new password via reset token
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export function ResetPassword() {
+  // Get reset token from URL parameters
   const [searchParams] = useSearchParams();
+
+  // State management for form and UI
   const [formData, setFormData] = useState({
     password: "",
     confirmPassword: "",
@@ -15,6 +20,7 @@ export function ResetPassword() {
   const navigate = useNavigate();
   const token = searchParams.get("token");
 
+  // Validate token on component mount
   useEffect(() => {
     if (!token) {
       setUiState((prev) => ({
@@ -25,6 +31,7 @@ export function ResetPassword() {
     }
   }, [token]);
 
+  // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -33,6 +40,7 @@ export function ResetPassword() {
     }));
   };
 
+  // Handle password reset form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUiState((prev) => ({ ...prev, error: "" }));

@@ -1,11 +1,8 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Dependencies
+node_modules/
+vendor/
+composer.phar
+composer.lock
 
 # Environment variables
 .env
@@ -14,56 +11,46 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
-# Dependencies
-node_modules
-vendor
-composer.phar
-composer.lock
-
 # Build outputs
-dist
-dist-ssr
+dist/
+dist-ssr/
+build/
 *.local
-build
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# PHP
-*.cache
+# Testing
+coverage/
+.nyc_output/
 .phpunit.result.cache
-
-# Backend config files (sensitive)
-backend/config/database.php
-backend/config/mail.php
 
 # Temporary files
 *.tmp
 *.temp
 *.bak
 *.swp
+*.cache
 *~
 
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
 # OS files
+.DS_Store
 Thumbs.db
 Desktop.ini
 
-# Testing
-coverage
-.nyc_output
-
-WAD_DTS_Portfolio.pdf
-design-documentation/DATABASE-ERD.md
-design-documentation/README.md
-design-documentation/TECHNICAL-NOTES.md
-design-documentation/USER-JOURNEYS.md
-design-documentation/WIREFRAMES.md
-design-documentation

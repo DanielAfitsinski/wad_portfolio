@@ -1,3 +1,5 @@
+// Card component for displaying enrolled course with unenroll action
+
 import type { EnrolledCourse } from "../../../types";
 
 interface EnrolledCourseCardProps {

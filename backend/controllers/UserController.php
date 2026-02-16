@@ -1,14 +1,18 @@
 <?php
+// User controller for managing user CRUD operations and course assignments
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/mail.php';
 
 class UserController {
     private $db;
     
+    // Initialize database connection
     public function __construct() {
         $this->db = Database::getInstance();
     }
     
+    // Get all users with their details
     public function getAllUsers() {
         try {
             $users = $this->db->query("
@@ -30,8 +34,10 @@ class UserController {
         }
     }
   
+    // Create new user account
     public function createUser($data) {
         try {
+            // Extract and sanitize input data
             $first_name = trim($data['first_name'] ?? '');
             $last_name = trim($data['last_name'] ?? '');
             $email = trim($data['email'] ?? '');
@@ -40,6 +46,7 @@ class UserController {
             $role = $data['role'] ?? 'user';
             $is_active = $data['is_active'] ?? true;
             
+            // Validate required fields
             if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
                 http_response_code(400);
                 return json_encode([
@@ -48,6 +55,7 @@ class UserController {
                 ]);
             }
             
+            // Validate email format
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 http_response_code(400);
                 return json_encode([
@@ -56,6 +64,7 @@ class UserController {
                 ]);
             }
             
+            // Validate password length
             if (strlen($password) < 6) {
                 http_response_code(400);
                 return json_encode([
@@ -74,10 +83,10 @@ class UserController {
                 ]);
             }
             
-            // Hash password
+            // Hash password for secure storage
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
             
-            // Create user
+            // Insert user into database
             $this->db->execute("
                 INSERT INTO users (first_name, last_name, email, job_title, password_hash, role, is_active, created_at) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())

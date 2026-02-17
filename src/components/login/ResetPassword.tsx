@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { authService } from "../../services/authService";
 
 export function ResetPassword() {
   // Get reset token from URL parameters
@@ -72,35 +73,16 @@ export function ResetPassword() {
     setUiState((prev) => ({ ...prev, loading: true }));
 
     try {
-      const response = await fetch("/api/login/reset-password.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          token,
-          password: formData.password,
-        }),
+      await authService.resetPassword(token!, formData.password);
+      navigate("/", {
+        state: { message: "Password reset successfully. Please login." },
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        navigate("/", {
-          state: { message: "Password reset successfully. Please login." },
-        });
-      } else {
-        setUiState((prev) => ({
-          ...prev,
-          error: data.error || "Password reset failed",
-        }));
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Request failed:", error);
       setUiState((prev) => ({
         ...prev,
-        error: "Connection error. Please try again.",
+        error:
+          error.response?.data?.error || "Connection error. Please try again.",
       }));
     } finally {
       setUiState((prev) => ({ ...prev, loading: false }));

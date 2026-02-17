@@ -44,7 +44,7 @@ class Database {
         }
     }
 
-    // Get database instance (singleton pattern)
+    // Get database instance
     public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();

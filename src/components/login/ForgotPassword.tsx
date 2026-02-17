@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../../services/authService";
 
 export function ForgotPassword() {
   // State management for form and UI
@@ -50,35 +51,20 @@ export function ForgotPassword() {
     setUiState((prev) => ({ ...prev, loading: true }));
 
     try {
-      const response = await fetch("/api/login/forgot-password.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-
-      if (response.ok) {
-        setUiState((prev) => ({
-          ...prev,
-          success: "Password reset link sent to your email",
-          loading: false,
-        }));
-        setEmail("");
-        setTimeout(() => navigate("/"), 3000);
-      } else {
-        setUiState((prev) => ({
-          ...prev,
-          error: data.error || "Request failed",
-          loading: false,
-        }));
-      }
-    } catch (error) {
+      await authService.forgotPassword(email);
+      setUiState((prev) => ({
+        ...prev,
+        success: "Password reset link sent to your email",
+        loading: false,
+      }));
+      setEmail("");
+      setTimeout(() => navigate("/"), 3000);
+    } catch (error: any) {
       console.error("Request failed: ", error);
       setUiState((prev) => ({
         ...prev,
-        error: "Connection error. Please try again",
+        error:
+          error.response?.data?.error || "Connection error. Please try again",
         loading: false,
       }));
     }

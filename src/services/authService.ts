@@ -44,4 +44,21 @@ export const authService = {
     const response = await axiosInstance.post("/login/logout.php", {});
     return response.data;
   },
+
+  // Request password reset email
+  async forgotPassword(email: string) {
+    const response = await axiosInstance.post("/login/forgot-password.php", {
+      email,
+    });
+    return response.data;
+  },
+
+  // Reset password with token
+  async resetPassword(token: string, password: string) {
+    const response = await axiosInstance.post("/login/reset-password.php", {
+      token,
+      password,
+    });
+    return response.data;
+  },
 };

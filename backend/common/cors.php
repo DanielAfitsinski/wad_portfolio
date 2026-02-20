@@ -12,10 +12,7 @@ function setCorsHeaders($allowedMethods = ['GET', 'POST']) {
     $allowedOrigins = [
         'http://localhost:5173',
         'http://localhost:3000',
-        'https://www.ws411479-wad.remote.ac',
         'https://ws411479-wad.remote.ac',
-        'http://www.ws411479-wad.remote.ac',
-        'http://ws411479-wad.remote.ac'
     ];
     
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';

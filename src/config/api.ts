@@ -15,7 +15,6 @@ export const API_ENDPOINTS = {
   // Authentication
   auth: {
     login: `${API_BASE_URL}/login/login.php`,
-    register: `${API_BASE_URL}/login/register.php`,
     logout: `${API_BASE_URL}/login/logout.php`,
     verifyAuth: `${API_BASE_URL}/login/verify-auth.php`,
     forgotPassword: `${API_BASE_URL}/login/forgot-password.php`,

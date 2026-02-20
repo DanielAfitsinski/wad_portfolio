@@ -29,16 +29,6 @@ export const authService = {
     return response.data;
   },
 
-  // Register new user account
-  async register(name: string, email: string, password: string) {
-    const response = await axiosInstance.post("/login/register.php", {
-      name,
-      email,
-      password,
-    });
-    return response.data;
-  },
-
   // End user session
   async logout() {
     const response = await axiosInstance.post("/login/logout.php", {});

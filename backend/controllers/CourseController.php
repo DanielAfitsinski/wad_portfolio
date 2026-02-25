@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../common/cors.php';
+require_once __DIR__ . '/../common/auth.php';
 
 class CourseController {
     
@@ -53,6 +54,7 @@ class CourseController {
     public static function createCourse() {
         setCorsHeaders(['POST']);
         validateMethod('POST');
+        requireAdminToken();
 
         try {
             $data = json_decode(file_get_contents('php://input'), true);
@@ -154,6 +156,7 @@ class CourseController {
     public static function updateCourse() {
         setCorsHeaders(['PUT']);
         validateMethod('PUT');
+        requireAdminToken();
 
         try {
             $data = json_decode(file_get_contents('php://input'), true);
@@ -291,6 +294,7 @@ class CourseController {
     public static function deleteCourse() {
         setCorsHeaders(['DELETE']);
         validateMethod('DELETE');
+        requireAdminToken();
 
         try {
             $data = json_decode(file_get_contents('php://input'), true);

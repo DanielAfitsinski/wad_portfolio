@@ -283,7 +283,7 @@ class AuthController {
             }
             
             http_response_code(200);
-            echo json_encode(['success' => true, 'message' => 'Reset link sent to your email']);
+            echo json_encode(['success' => true, 'message' => 'If email exists, reset link will be sent']);
 
         } catch(Exception $e){
             error_log('Forgot password error: ' . $e->getMessage());

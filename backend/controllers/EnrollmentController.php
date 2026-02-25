@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/mail.php';
 require_once __DIR__ . '/../common/cors.php';
+require_once __DIR__ . '/../common/auth.php';
 
 class EnrollmentController {
     
@@ -18,6 +19,8 @@ class EnrollmentController {
         
         validateMethod('POST');
 
+        $sessionUser = verifyAuthToken();
+
         $input = json_decode(file_get_contents('php://input'), true);
 
         // Validate required fields
@@ -29,6 +32,13 @@ class EnrollmentController {
 
         $userId = (int)$input['user_id'];
         $courseId = (int)$input['course_id'];
+
+        // Regular users may only enroll themselves
+        if ($sessionUser['role'] !== 'admin' && $userId !== (int)$sessionUser['id']) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: You can only enrol yourself']);
+            exit();
+        }
 
         try {
             $db = self::getDB();
@@ -118,6 +128,8 @@ class EnrollmentController {
         
         validateMethod('GET');
 
+        $sessionUser = verifyAuthToken();
+
         if (!isset($_GET['user_id']) || !is_numeric($_GET['user_id'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Bad Request: user_id is required']);
@@ -125,6 +137,13 @@ class EnrollmentController {
         }
 
         $userId = (int) $_GET['user_id'];
+
+        // Regular users may only read their own enrollments
+        if ($sessionUser['role'] !== 'admin' && $userId !== (int)$sessionUser['id']) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: You can only view your own enrollments']);
+            exit();
+        }
 
         try {
             $db = self::getDB();
@@ -164,6 +183,8 @@ class EnrollmentController {
         
         validateMethod('POST');
 
+        $sessionUser = verifyAuthToken();
+
         $input = json_decode(file_get_contents('php://input'), true);
 
         if(!isset($input['enrollment_id']) && !isset($input['user_id']) && !isset($input['course_id'])){
@@ -198,6 +219,19 @@ class EnrollmentController {
                 }
                 
                 $enrollmentId = $enrollment['id'];
+            }
+
+            // Regular users may only unenroll themselves
+            if ($sessionUser['role'] !== 'admin') {
+                $ownerCheck = $db->queryOne(
+                    "SELECT user_id FROM course_enrollments WHERE id = ?",
+                    [$enrollmentId]
+                );
+                if (!$ownerCheck || (int)$ownerCheck['user_id'] !== (int)$sessionUser['id']) {
+                    http_response_code(403);
+                    echo json_encode(['error' => 'Forbidden: You can only unenrol yourself']);
+                    exit();
+                }
             }
 
             $rowCount = $db->execute("DELETE FROM course_enrollments WHERE id = ?", [$enrollmentId]);

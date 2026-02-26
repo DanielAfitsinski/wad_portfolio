@@ -128,6 +128,7 @@ class UserController {
                 FROM users WHERE id = ?
             ", [$userId]);
             
+            http_response_code(201);
             return json_encode([
                 'success' => true,
                 'message' => 'User created successfully',

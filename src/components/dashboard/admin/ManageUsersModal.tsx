@@ -33,6 +33,8 @@ export function ManageUsersModal({
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const USERS_PER_PAGE = 10;
 
   // Load users when modal opens
   useEffect(() => {
@@ -126,6 +128,16 @@ export function ManageUsersModal({
     );
   });
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredUsers.length / USERS_PER_PAGE),
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedUsers = filteredUsers.slice(
+    (safePage - 1) * USERS_PER_PAGE,
+    safePage * USERS_PER_PAGE,
+  );
+
   return (
     <>
       <div
@@ -176,20 +188,35 @@ export function ManageUsersModal({
                         className="form-control"
                         placeholder="Search by name, email, job title, or role..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setCurrentPage(1);
+                        }}
                       />
                       {searchQuery && (
                         <button
                           className="btn btn-outline-secondary"
                           type="button"
-                          onClick={() => setSearchQuery("")}
+                          onClick={() => {
+                            setSearchQuery("");
+                            setCurrentPage(1);
+                          }}
                         >
                           <i className="bi bi-x"></i>
                         </button>
                       )}
                     </div>
                     <small className="text-muted">
-                      Showing {filteredUsers.length} of {users.length} user(s)
+                      Showing{" "}
+                      {filteredUsers.length === 0
+                        ? 0
+                        : (safePage - 1) * USERS_PER_PAGE + 1}
+                      –
+                      {Math.min(
+                        safePage * USERS_PER_PAGE,
+                        filteredUsers.length,
+                      )}{" "}
+                      of {filteredUsers.length} user(s)
                     </small>
                   </div>
                   <div className="table-responsive">
@@ -217,7 +244,7 @@ export function ManageUsersModal({
                             </td>
                           </tr>
                         ) : (
-                          filteredUsers.map((user) => (
+                          pagedUsers.map((user) => (
                             <tr key={user.id}>
                               {editingUser?.id === user.id ? (
                                 <>
@@ -400,6 +427,49 @@ export function ManageUsersModal({
                       </tbody>
                     </table>
                   </div>
+
+                  {totalPages > 1 && (
+                    <nav className="mt-3">
+                      <ul className="pagination pagination-sm justify-content-center mb-0">
+                        <li
+                          className={`page-item ${safePage === 1 ? "disabled" : ""}`}
+                        >
+                          <button
+                            className="page-link"
+                            onClick={() => setCurrentPage(safePage - 1)}
+                          >
+                            <i className="bi bi-chevron-left" />
+                          </button>
+                        </li>
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1,
+                        ).map((p) => (
+                          <li
+                            key={p}
+                            className={`page-item ${p === safePage ? "active" : ""}`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(p)}
+                            >
+                              {p}
+                            </button>
+                          </li>
+                        ))}
+                        <li
+                          className={`page-item ${safePage === totalPages ? "disabled" : ""}`}
+                        >
+                          <button
+                            className="page-link"
+                            onClick={() => setCurrentPage(safePage + 1)}
+                          >
+                            <i className="bi bi-chevron-right" />
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  )}
 
                   <div className="mt-4 border-top pt-3">
                     <button

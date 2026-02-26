@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { adminService } from "../../../services/adminService";
 import type { CreateUserData, ApiError } from "../../../types";
+import {
+  PasswordStrengthIndicator,
+  isPasswordStrong,
+} from "../../login/PasswordStrengthIndicator";
 
 interface AddUserModalProps {
   show: boolean;
@@ -34,6 +38,12 @@ export function AddUserModal({
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    if (!isPasswordStrong(formData.password)) {
+      setError("Password does not meet the strength requirements");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -185,10 +195,9 @@ export function AddUserModal({
                     setFormData({ ...formData, password: e.target.value })
                   }
                   required
-                  minLength={6}
                   disabled={loading}
                 />
-                <div className="form-text">Minimum 6 characters</div>
+                <PasswordStrengthIndicator password={formData.password} />
               </div>
 
               <div className="mb-3">

@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../../services/authService";
+import {
+  PasswordStrengthIndicator,
+  isPasswordStrong,
+} from "./PasswordStrengthIndicator";
 
 export function ResetPassword() {
   // Get reset token from URL parameters
@@ -54,10 +58,10 @@ export function ResetPassword() {
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (!isPasswordStrong(formData.password)) {
       setUiState((prev) => ({
         ...prev,
-        error: "Password must be at least 6 characters",
+        error: "Password does not meet the requirements below",
       }));
       return;
     }
@@ -123,6 +127,7 @@ export function ResetPassword() {
                       className="form-control"
                       placeholder="Enter new password"
                     />
+                    <PasswordStrengthIndicator password={formData.password} />
                   </div>
 
                   <div className="mb-3">

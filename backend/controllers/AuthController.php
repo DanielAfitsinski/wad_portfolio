@@ -308,10 +308,30 @@ class AuthController {
         $token = $input['token'];
         $password = $input['password'];
 
-        // Validate password length
-        if (strlen($password) < 6) {
+        // Validate password strength
+        if (strlen($password) < 8) {
             http_response_code(400);
-            echo json_encode(['error' => 'Password must be at least 6 characters']);
+            echo json_encode(['error' => 'Password must be at least 8 characters']);
+            exit();
+        }
+        if (!preg_match('/[A-Z]/', $password)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must contain at least one uppercase letter']);
+            exit();
+        }
+        if (!preg_match('/[a-z]/', $password)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must contain at least one lowercase letter']);
+            exit();
+        }
+        if (!preg_match('/[0-9]/', $password)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must contain at least one number']);
+            exit();
+        }
+        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must contain at least one special character']);
             exit();
         }
 

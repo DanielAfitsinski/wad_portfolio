@@ -64,12 +64,40 @@ class UserController {
                 ]);
             }
             
-            // Validate password length
-            if (strlen($password) < 6) {
+            // Validate password strength
+            if (strlen($password) < 8) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
-                    'error' => 'Password must be at least 6 characters'
+                    'error' => 'Password must be at least 8 characters'
+                ]);
+            }
+            if (!preg_match('/[A-Z]/', $password)) {
+                http_response_code(400);
+                return json_encode([
+                    'success' => false,
+                    'error' => 'Password must contain at least one uppercase letter'
+                ]);
+            }
+            if (!preg_match('/[a-z]/', $password)) {
+                http_response_code(400);
+                return json_encode([
+                    'success' => false,
+                    'error' => 'Password must contain at least one lowercase letter'
+                ]);
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                http_response_code(400);
+                return json_encode([
+                    'success' => false,
+                    'error' => 'Password must contain at least one number'
+                ]);
+            }
+            if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+                http_response_code(400);
+                return json_encode([
+                    'success' => false,
+                    'error' => 'Password must contain at least one special character'
                 ]);
             }
             

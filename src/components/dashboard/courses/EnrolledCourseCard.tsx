@@ -41,7 +41,15 @@ export function EnrolledCourseCard({
             </span>
             <button
               className="btn btn-danger btn-sm"
-              onClick={() => onUnenroll(course.enrollmentId)}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Are you sure you want to unenroll from "${course.title}"?`,
+                  )
+                ) {
+                  onUnenroll(course.enrollmentId);
+                }
+              }}
             >
               Unenroll
             </button>

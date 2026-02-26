@@ -90,7 +90,15 @@ export function CourseCard({
                 isFull || isEnrolled ? "btn-secondary" : "btn-primary"
               }`}
               disabled={isFull || isEnrolled}
-              onClick={() => onEnroll(course.id)}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Are you sure you want to enroll in "${course.title}"?`,
+                  )
+                ) {
+                  onEnroll(course.id);
+                }
+              }}
             >
               {isEnrolled ? "Enrolled" : isFull ? "Full" : "Enroll"}
             </button>

@@ -24,7 +24,7 @@ export function AvailableCoursesSection({
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 9;
+  const PAGE_SIZE = 6;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();

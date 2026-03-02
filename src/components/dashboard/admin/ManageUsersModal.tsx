@@ -145,7 +145,7 @@ export function ManageUsersModal({
         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         tabIndex={-1}
       >
-        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-fullscreen-md-down">
           <div className="modal-content">
             <div
               className="modal-header"

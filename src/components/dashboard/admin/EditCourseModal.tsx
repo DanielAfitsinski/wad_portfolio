@@ -241,7 +241,7 @@ export function EditCourseModal({
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
       tabIndex={-1}
     >
-      <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-md-down">
         <div className="modal-content">
           <div
             className="modal-header"
@@ -398,7 +398,7 @@ export function EditCourseModal({
                       </div>
                     </div>
 
-                    <div className="d-flex justify-content-between align-items-center gap-2">
+                    <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                       <div className="d-flex gap-2">
                         <button
                           type="submit"

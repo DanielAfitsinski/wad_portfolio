@@ -4,3 +4,72 @@ body {
   margin: 0;
   padding: 0;
 }
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+@media (max-width: 767.98px) {
+  .btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .form-control,
+  .form-select {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+}
+
+.nav-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-text {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+.modal-body {
+  overflow-x: hidden;
+}
+
+@media (max-width: 359px) {
+  .card .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .card-body {
+    padding: 1.25rem;
+  }
+}

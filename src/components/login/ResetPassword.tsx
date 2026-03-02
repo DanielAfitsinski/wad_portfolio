@@ -95,8 +95,8 @@ export function ResetPassword() {
 
   return (
     <div className="container">
-      <div className="row justify-content-center mt-5">
-        <div className="col-md-6">
+      <div className="row justify-content-center mt-4 mt-md-5">
+        <div className="col-11 col-sm-10 col-md-6">
           <div className="card">
             <div className="card-body">
               <h2 className="card-title text-center mb-4">Reset Password</h2>

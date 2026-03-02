@@ -72,7 +72,7 @@ export function AddCourseModal({
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
       tabIndex={-1}
     >
-      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
         <div className="modal-content">
           <div
             className="modal-header"

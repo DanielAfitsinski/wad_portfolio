@@ -33,7 +33,7 @@ export function CourseCard({
   };
 
   return (
-    <div className="col-md-6 col-lg-4 mb-3">
+    <div className="col-12 col-sm-6 col-lg-4 mb-3">
       <div className="card h-100">
         <div className="card-body">
           <h5 className="card-title">{course.title}</h5>

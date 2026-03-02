@@ -89,7 +89,7 @@ export function AddUserModal({
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
       tabIndex={-1}
     >
-      <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Add New User</h5>
